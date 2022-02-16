@@ -137,7 +137,7 @@ knitr::include_graphics("photo/Lab01_economist.jpg")
 - BBC
 
 ```{r out.width='90%', out.height='90%',echo=FALSE}
-knitr::include_graphics("photo/Lab01_BBC.jpg")
+knitr::include_graphics("photo/Lab01_bbc.jpg")
 ```
 
 ---
@@ -148,7 +148,7 @@ knitr::include_graphics("photo/Lab01_BBC.jpg")
 - Financial Times
 
 ```{r out.width='90%', out.height='90%',echo=FALSE}
-knitr::include_graphics("photo/Lab01_FT.jpg")
+knitr::include_graphics("photo/Lab01_ft.jpg")
 ```
 
 ---
