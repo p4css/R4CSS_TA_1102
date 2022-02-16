@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lab01 Tutorial</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="曾子軒 Dennis Tseng" />
+    <script src="libs/header-attrs-2.6/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lab01 Tutorial
+## R Briefing and TA part
+### 曾子軒 Dennis Tseng
+### 台大新聞所 NTU Journalism
+### 2022/02/18
+
+---
+
+&lt;style type="text/css"&gt;
+
+.remark-slide-content {
+    padding: 1em 1em 1em 1em;
+    font-size: 28px;
+}
+
+.my-one-page-font {
+  padding: 1em 1em 1em 1em;
+  font-size: 20px;
+  /*xaringan::inf_mr()*/
+}
+
+&lt;/style&gt;
+
+
+
+# 自我介紹
+
+&lt;ul&gt;
+&lt;li&gt;personal background
+    &lt;ul&gt;
+    &lt;li&gt;學校：工管系企管組畢業，新聞所碩二&lt;/li&gt;
+    &lt;li&gt;實習：電商數據分析、城市數據分析、新聞數位敘事&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;li&gt;Interest
+    &lt;ul&gt;
+    &lt;li&gt;領域：資料分析、資料新聞&lt;/li&gt;
+    &lt;li&gt;方法：統計、空間分析、社群網絡分析&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;li&gt;Teaching experience
+    &lt;ul&gt;
+    &lt;li&gt;109-2 新聞資料處理與視覺呈現&lt;/li&gt;
+    &lt;li&gt;109-寒假 text mining&lt;/li&gt;
+    &lt;li&gt;108-1 資料科學與社會研究, 資料新聞工作坊&lt;/li&gt;
+    &lt;li&gt;家教: R &amp; 統計, R &amp; text mining&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+
+---
+
+# What can R do?
+
+- R 可以做很多事
+- 產生網頁、架設部落格、寫書
+- 輸出成 word, PTT, html 多種格式
+- 對學生/記者來說呢
+
+&lt;img src="photo/Lab01_rbook.jpg" width="2560" /&gt;
+
+---
+
+# What can R do?
+
+- 之前的作業：處理資料
+
+&lt;img src="photo/Lab00_data-crunching.jpg" width="1161" /&gt;
+
+---
+
+# What can R do?
+
+- 之前的作業：視覺化公投結果
+
+&lt;img src="photo/Lab00_referendum-viz.jpg" width="1179" /&gt;
+
+---
+
+# What can R do?
+
+- 之前的作業：分析總統演說內容
+
+&lt;img src="photo/Lab00_presidential-speech.jpg" width="1117" /&gt;
+
+---
+
+# What can R do?
+
+- 之前的作業：爬網站資料
+
+&lt;img src="photo/Lab00_web-scraping.jpg" width="983" /&gt;
+
+---
+
+# What can R do?
+
+- 之前的作業：畫地圖
+
+&lt;img src="photo/Lab00_GIS-viz.jpg" width="1645" /&gt;
+
+---
+
+# Who uses R?
+
+- 媒體業常常使用 R，不唬爛
+- 經濟學人
+
+&lt;img src="photo/Lab01_economist.jpg" width="90%" height="90%" /&gt;
+
+---
+
+# Who uses R?
+
+- 媒體業常常使用 R，不唬爛
+- BBC
+
+&lt;img src="photo/Lab01_BBC.jpg" width="90%" height="90%" /&gt;
+
+---
+
+# Who uses R?
+
+- 台灣的案例
+- readr
+
+&lt;img src="photo/Lab01_readr.jpg" width="90%" height="90%" /&gt;
+---
+
+# Who uses R?
+
+- 台灣的案例
+- 天下雜誌
+
+&lt;img src="photo/Lab01_dataman.jpg" width="90%" height="90%" /&gt;
+
+---
+
+# You can ... after taking this course
+
+- 獲取資料：從不同來源獲取數據，包含 open data, API, 寫爬蟲 
+- 讀取資料：讀進各類型的資料，包含 csv, JSON, shapefile 等
+- 清理資料：格式轉換, 寫條件判斷, 中英文處理, missing value
+- 資料變換：探索, 摘要, 欄位增減, 分組, 長寬表格轉換
+- 資料視覺化：在 R 中繪製有意義且好看、好讀的圖表
+- 文字探勘：學習 tf-idf, LDA, word segmentation 等概念並使用
+- 空間資料處理：應對空間資料結構, 把 R 當成 GIS, 繪製地圖
+
+---
+
+# 我負責的事情
+
+- Lab
+ - Tutorial: 複習老師授課, 補充額外知識, 用簡報上課
+ - Practice: 出一些練習題讓同學熟悉當週內容
+- Assigment
+ - 以老師上課與回家內容為出題方向
+ - 盡量使用 real, local, daily 的資料貼近實務
+ - 不會每週都有
+
+---
+# 一些不錯的資源 
+
+- Meetup
+ - [R-Ladies Taipei](https://www.facebook.com/groups/RLadiesTaipei/permalink/2305950439482020)
+ - [Taiwan R User Group](https://www.meetup.com/Taiwan-R/)
+- Facebook Group
+ - [台灣R軟體Club](https://www.facebook.com/groups/1210634969026548)
+ - [大數俱樂部](https://www.facebook.com/groups/242102892820317)
+- Asking Questions
+ - [stackoverflow](https://stackoverflow.com/)
+ - [PTT R_Language](https://www.ptt.cc/bbs/R_Language/index.html)
+- Other
+ - [Bookdown](https://bookdown.org/)
+ - [Rweekly](https://rweekly.org/)
+
+---
+
+class: inverse, center, middle
+
+# Enjoy Learing 
+
+希望 R 能變成你的第二外語！
+
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"self_contained": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
