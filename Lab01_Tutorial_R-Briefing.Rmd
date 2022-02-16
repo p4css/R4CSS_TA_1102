@@ -123,7 +123,7 @@ knitr::include_graphics('photo/Lab00_GIS-viz.jpg')
 # Who uses R?
 
 - 媒體業常常使用 R，不唬爛
-- 經濟學人
+- The Economist
 
 ```{r out.width='90%', out.height='90%',echo=FALSE}
 knitr::include_graphics("photo/Lab01_economist.jpg")
@@ -138,6 +138,17 @@ knitr::include_graphics("photo/Lab01_economist.jpg")
 
 ```{r out.width='90%', out.height='90%',echo=FALSE}
 knitr::include_graphics("photo/Lab01_BBC.jpg")
+```
+
+---
+
+# Who uses R?
+
+- 媒體業常常使用 R，不唬爛
+- Financial Times
+
+```{r out.width='90%', out.height='90%',echo=FALSE}
+knitr::include_graphics("photo/Lab01_FT.jpg")
 ```
 
 ---
