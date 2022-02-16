@@ -1,0 +1,93 @@
+---
+title: "Lab02 Tutorial"
+subtitle: "RMarkdown and Github"
+author: "曾子軒 Dennis Tseng"
+institute: "台大新聞所 NTU Journalism"
+date: "2022/02/18"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      self_contained: true
+---
+<style type="text/css">
+
+.remark-slide-content {
+    padding: 1em 1em 1em 1em;
+    font-size: 28px;
+}
+
+.my-one-page-font {
+  padding: 1em 1em 1em 1em;
+  font-size: 20px;
+  /*xaringan::inf_mr()*/
+}
+
+</style>
+
+```{r message=FALSE,warning=FALSE,echo=FALSE}
+
+```
+
+# Github 相關 
+
+- Github
+ - 去[官網](https://github.com/)註冊帳號
+ - 老師上課的 code [連結](https://github.com/P4CSS/R4CSS)
+ - 老師上課的 data [連結](https://github.com/P4CSS/R4CSSData)
+ - 助教 lab 和作業的  [連結](https://github.com/P4CSS/R4CSS_TA)
+- Github Desktop
+ - 去[官網](https://desktop.github.com/)下載，然後登入
+ - 再去剛剛作業的 [連結](https://github.com/P4CSS/R4CSS_TA_1102)
+ - 找到 code 按下，然後可以選擇 open with github desktop 或者 download ZIP，兩者各有優缺
+
+---
+# 檔案更新與交作業
+
+- 檔案更新
+ - 打開 Github Desktop，只要雲端上有更新，就把 "pull" 抓下來
+ - 優點：快速(因為只要抓有更新的檔案)
+ - 打開 Github 網頁，只要雲端上有更新，就全部下載下來
+ - 優點：簡單(不用理解 push, pull, repo, commit)
+- 交作業
+ - 下載作業後編輯 Rmd，完成後輸出成 html
+ - 繳交 Rmd 與 html 至 NTU Cool
+ 
+---
+# 檔案格式
+
+- R
+ - 檔案名稱以.R 作為結尾，平常都在裡面寫程式
+- Rmd
+ - 檔案名稱以.Rmd 作為結尾，裡面可以寫文字也可以寫程式
+ - Lab 的 homework 跟 Assignment 都用這個編寫
+- html
+ - 檔案名稱以.html 作為結尾，用來組織架構並呈現網頁內容
+ - Lab 的 homework 跟 Assignment 都輸出成這個
+
+---
+# RMarkdown 與 Markdown
+
+- Markdown
+ - 一種標記語言，特色是無須透過滑鼠便可完成排版
+ - 非常容易閱讀，且簡單好學不吃力
+ - 中文版教學如 [Markdown Cheatsheet 中文版](https://gist.github.com/billy3321/1001749662c370887c63bb30f26c9e6e) 或者 [Gitbook語法](https://cowmanchiang.me/gitbook/gitbook/contents/how.html)
+ - 英文版教學如 [Mastering Markdown](https://guides.github.com/features/mastering-markdown/)，以及 RStudio 寫的 [Pandoc Markdown
+](https://rmarkdown.rstudio.com/authoring_pandoc_markdown.html)
+- RMarkdown
+ - 是一種檔案類型(file format)，使用者可以在 R 當中交替使用 Markdown 內文以及 R 的程式碼，並輸出多樣格式，如 hmtl, word, PDF, PPT 等，用途很廣
+ - 之後的作業就是讓在 RMarkdown 中同時寫文字與程式碼
+
+---
+
+class: inverse, center, middle
+
+# Practice Markdown!
+
+Using [Markdown online editor](https://jbt.github.io/markdown-editor/)
+
+

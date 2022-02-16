@@ -1,5 +1,5 @@
 ---
-title: "Lab00 Tutorial"
+title: "Lab01 Tutorial"
 subtitle: "R Briefing and TA part"
 author: "曾子軒 Dennis Tseng"
 institute: "台大新聞所 NTU Journalism"
