@@ -3,7 +3,7 @@ title: "Lab01 Tutorial"
 subtitle: "R Briefing and TA part"
 author: "曾子軒 Dennis Tseng"
 institute: "台大新聞所 NTU Journalism"
-date: "2022/02/18"
+date: "2022/02/17"
 output:
   xaringan::moon_reader:
     css: [default, metropolis, metropolis-fonts]
