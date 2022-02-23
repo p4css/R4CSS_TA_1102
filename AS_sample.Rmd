@@ -1,0 +1,99 @@
+---
+title: "AS08_Web-Scraping-HTML"
+author: "你是誰 R09342000 新聞所碩五"
+date: "2021/05/11"
+output:
+  html_document:
+    number_sections: no
+    theme: united
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'markup', comment = '#>', error = TRUE)
+```
+
+## 作業目的: Web Scraping (02) HTML
+
+這份作業希望能夠讓你熟悉 Web Scraping 的流程。
+
+## 作業: Web Scraping (02) HTML
+
+### 題目說明
+
+這份作業希望能夠讓你熟悉 Web Scraping 的流程。本次作業的案例為[蘋果基金會的捐款平台](https://tw.feature.appledaily.com/charity/projlist/1)。對於這樣的捐款平台，就資料新聞的角度來說，我們可以去看哪些人是常見的捐款者？甚至用文字探勘的方法去了解哪些類型的案子是常見的捐款案？就資料科學的角度來說，我們可以抽取出捐款新聞文字描述、記者姓名、捐款類別等來預估最後捐款的總數。
+
+本作業是上述案例的第一步驟，就是獲取資料。請盡可能獲取所有蘋果基金會捐款案的近10頁資料。並且應可獲得每一筆捐款案的以下欄位，前為tibble的指定名稱，括號內為指定變數名稱。
+
+1. df_case_list，包含捐款案id(case_id)、新聞標題(title)、捐款案時間(date)、捐款案狀態(status)、捐款總額(amount)、新聞連結(link)、捐款明細連結(link_detail)
+
+2. df_case_donation，包含捐款案id(case_id)、捐款明細連結(link_detail)、捐款者(donator)、捐款金額(donation)、捐款時間(donate_date)
+
+3. df_case_news，包含新聞連結(link)、新聞內容(text)、新聞發布時間(time)、記者或攝影師(reporter)、首圖圖說(caption)、**配圖數量(n_figure)**(這很難抓可以放棄)
+
+### 作業要求
+
+- 請去掉下方程式碼的註解(檢查部分) 以驗證你所抓到的資料未有重複
+- 用橫向 bar chart 印出捐款次數最多的前十大單位或個體（注意，個體可能是以全形或半形逗號分隔。先不處理填錯名字的問題、也暫時不考慮如「XXX全家」的問題）
+- 請用 `glimpse()` 分別呈現上述 tibble 的長相
+
+### 計分方式
+
+- 上述作業要求的驗證與 bar chart
+- `df_case_list` 爬蟲過程與內容，包含捐款案id(case_id)、新聞標題(title)、捐款案時間(date)、捐款案狀態(status)、捐款總額(amount)、新聞連結(link)、捐款明細連結(link_detail)
+- `df_case_donation` 爬蟲過程與內容，包含捐款案id(case_id)、捐款明細連結(link_detail)、捐款者(donator)、捐款金額(donation)、捐款時間(donate_date)
+- `df_case_news` 爬蟲過程與內容，包含新聞連結(link)、新聞內容(text)
+- bonus: `df_case_news` 抓到的欄位越多加分越多，你可以多抓新聞標題(title)、新聞發布時間(time)、記者或攝影師(reporter)、首圖配字(caption)、圖片數量(n_figure)，並 join `df_case_list` and `df_case_news` 再呈現結果
+
+**再次重申：圖片數量很難抓，不要花太多時間在上面，我也抓不到！**
+
+### 作答區 - 爬蟲程式碼
+
+你可以把結果匯出成 `csv`，這樣就不用每次 knit 都要重抓一次資料，不過爬蟲的 code 要留著喔！加上 # comment 就好。
+
+```{r message=FALSE, warning=FALSE}
+### your code
+library(tidyverse)
+# url = "https://tw.feature.appledaily.com/charity/projlist/1"
+
+# df_case_list %>% write_csv("data/AS08/df_case_list.csv")
+# df_case_donation %>% write_csv("data/AS08/df_case_donation.csv")
+# df_case_news %>% write_csv("data/AS08/df_case_news.csv")
+```
+
+### 作答區 - 作業要求檢查
+
+請去掉「檢查部分!!! 請去掉!!!」的 comment 後執行喔！可以用來確認結果！
+
+```{r message=FALSE, warning=FALSE}
+### your code
+# df_case_list <- read_csv("data/AS08/df_case_list.csv")
+# df_case_donation <- read_csv("data/AS08/df_case_donation.csv")
+# df_case_news <- read_csv("data/AS08/df_case_news.csv")
+
+## 檢查部分!!! 請去掉!!!
+# df_case_list %>% summarise(n_distinct(case_id))
+# df_case_list %>% summarise(n_distinct(link))
+# df_case_list %>% summarise(n_distinct(link_detail))
+# df_case_donation %>% summarise(n_distinct(link_detail))
+# df_case_news %>% summarise(n_distinct(link))
+
+## bar chart
+
+## 看長相
+# df_case_list %>% glimpse()
+# df_case_donation %>% glimpse()
+# df_case_news %>% glimpse()
+
+## 加分題
+# df_case_list %>% left_join(df_case_news) %>% count(is.na(reporter))
+# df_case_list %>% left_join(df_case_news) %>% count(is.na(time))
+# df_case_list %>% left_join(df_case_news) %>%
+#   select(case_id, title, date, time, reporter, caption) %>% glimpse()
+```
+
+
