@@ -165,7 +165,6 @@ knitr::include_graphics('photo/Lab03_rproj04.jpg')
  - 沒關係，剛碰的時候很難懂
  - 只要記得，打開 `.Rproj` 就對了！
 
-- BAD
 ```{r, out.width='100%', out.height='100%', echo=FALSE}
 knitr::include_graphics('photo/Lab02_rproj.jpg')
 ```
