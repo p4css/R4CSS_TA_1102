@@ -1,5 +1,12 @@
 # R4CSS_TA
 
+
+### week05_03/17
+
+* AS 02 Homework Know Your Data [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS02_Homework_know-your-data.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS02_Homework_know-your-data.html) 
+
+* AS 01 Reference R Basic and Intermediate [Rmd](), [html]() 
+
 ### week03_03/03
 
 * AS 01 Homework R Basic and Intermediate [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS01_Homework_R-Basic-Intermediate.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS01_Homework_R-Basic-Intermediate.html) 

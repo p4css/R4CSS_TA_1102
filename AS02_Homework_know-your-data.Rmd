@@ -1,0 +1,200 @@
+---
+title: "AS02_Homework_Know-Your-Data"
+author: "你是誰 R10342000 新聞所碩五"
+date: "2021/03/17"
+output:
+  html_document:
+    number_sections: no
+    theme: united
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'hold', comment = '#>', error = TRUE)
+```
+
+## 作業目的:   
+
+這份作業希望能夠讓你熟悉讀取不同檔案型態的資料，並利用 `dplyr` 裡面幾個動詞，讓你可以認識自己要分析的資料！
+
+### data importing & basic data manipulation (01)
+
+資料介紹：這份資料改編自[內政部不動產交易實價登錄查詢](https://lvr.land.moi.gov.tw/)，內容是 110 年 1 月自 3 月為止，台北市大安區羅斯福路上的不動產交易。
+
+(1) import a excel file：請讀取存在 `data 資料夾 -> AS02 資料夾 -> 實價登錄_羅斯福路.xlsx` 這個檔案裡面的 `實價登錄` 分頁，取名為 `df_house`，並將前 3 列印出。這個 excel 檔案裡面有兩個分頁，不要讀錯囉。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 3 × 6
+#>   地段位置或門牌               總價_萬元 總面積_坪 型態               屋齡 電梯 
+#>   <chr>                            <dbl>     <dbl> <chr>             <dbl> <chr>
+#> 1 羅斯福路三段５７號四樓            3956      34.6 住宅大樓(11層含…      5 有   
+#> 2 羅斯福路三段３３３巷２號四樓      1250      20.6 公寓(5樓含以下無…    NA 無   
+#> 3 羅斯福路三段２２７號二樓之２      3800      54.4 住宅大樓(11層含…     33 有
+```
+
+(2) find missing values：請利用程式找出 `df_house` 裡面哪些欄位有 missing value，並以文字敘述各個欄位 missing value 的狀況。舉例：A 欄位有 2 個 missing values、B 欄位有 3 個 missing values。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+# 要有程式碼呈現 NA 數目
+# 接著文字敘述 e.g. 完美，都沒有 missing values
+```
+
+(2) calculate means：請計算這包資料中的平均屋齡，不過會遇到 missing values，請你想想怎麼做比較好，決定後解釋你怎麼選擇。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+# 要有程式碼呈現平均屋齡
+# 接著文字解釋
+```
+
+(3) deal with missing values：遇到 missing values，是要踢掉那筆資料嗎？還是可以用某些值填上？請針對`電梯`欄位，解釋先以文字敘述你會怎麼選擇怎麼處理、理由為何，接著用程式碼實作，並將結果存到 `df_house_clean`，再將最後 3 列印出。舉例：我覺得可能有電梯也可能沒有電梯，所以我決定隨機決定電梯的有無。（然後用程式碼實作隨機分派的過程）
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+# * 你的電梯欄位長相可能跟我不一樣
+#> # A tibble: 3 × 6
+#>   地段位置或門牌                 總價_萬元 總面積_坪 型態              屋齡 電梯 
+#>   <chr>                              <dbl>     <dbl> <chr>            <dbl> <chr>
+#> 1 羅斯福路三段２６９巷７２號二樓      3450      43.1 華廈(10層含以下…    NA 有   
+#> 2 羅斯福路三段９９號十樓之３          2208      18.5 住宅大樓(11層含…    22 有   
+#> 3 羅斯福路四段１１９巷３０號六樓      3110      50.8 華廈(10層含以下…    34 有
+```
+
+(4) calculate number：請幫我增加 `price_avg` 欄位，計算各間房屋的每坪價格，把結果存在 `df_house_price`，並將前 3 列印出。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 3 × 7
+#>   地段位置或門牌               總價_萬元 總面積_坪 型態     屋齡 電梯  price_avg
+#>   <chr>                            <dbl>     <dbl> <chr>   <dbl> <chr>     <dbl>
+#> 1 羅斯福路三段５７號四樓            3956      34.6 住宅大…     5 有        115. 
+#> 2 羅斯福路三段３３３巷２號四樓      1250      20.6 公寓(5…    NA 無         60.7
+#> 3 羅斯福路三段２２７號二樓之２      3800      54.4 住宅大…    33 有         69.9
+```
+
+(5) keep columns needed and filtering：請先幫我篩選出總價超過 2000 萬元的房屋，接著篩選出平均每坪價格小於 80 萬元的房屋，最後幫我留下 `地段位置或門牌`, `電梯`, `price_avg` 3 個欄位，並將結果印出。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 4 × 3
+#>   地段位置或門牌                 電梯  price_avg
+#>   <chr>                          <chr>     <dbl>
+#> 1 羅斯福路三段２２７號二樓之２   有         69.9
+#> 2 羅斯福路二段６７號地下室       有         29.2
+#> 3 羅斯福路三段２７７之６號       有         75.8
+#> 4 羅斯福路四段１１９巷３０號六樓 有         61.2
+```
+
+### data importing & basic data manipulation (02)
+
+資料介紹：這份資料改編自[內政部社會經濟資料服務平台](https://segis.moi.gov.tw/STAT/Web/Platform/QueryInterface/STAT_QueryInterface.aspx?Type=1#)，簡稱為 SEGIS，內容是 110 年 9 月台灣各縣市的人口統計，其中包含戶數（h_cnt）、人口數（p_cnt）、男性人口數（m_cnt）、女性人口數（f_cnt）。
+
+(1) import a csv file：請讀取存在 `data 資料夾 -> AS01 資料夾 -> 行政區人口統計_縣市_202109.csv` 的這個檔案，取名為 `df_pop`，並將前 3 列印出。這份資料中，
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 3 × 6
+#>   county_id county   h_cnt   p_cnt   m_cnt   f_cnt
+#>   <chr>     <chr>    <dbl>   <dbl>   <dbl>   <dbl>
+#> 1 65000     新北市 1620493 4017632 1961812 2055820
+#> 2 63000     臺北市 1057327 2544720 1211361 1333359
+#> 3 68000     桃園市  860144 2272812 1125649 1147163
+```
+
+(2) add columns：請利用 `df_pop` 增加新欄位`city`，若為六都則為"六都"，六都以外為 "非六都"，將結果存在 `df_pop2` 裡面後，印出前 10 列。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 10 × 7
+#>    county_id county   h_cnt   p_cnt   m_cnt   f_cnt city  
+#>    <chr>     <chr>    <dbl>   <dbl>   <dbl>   <dbl> <chr> 
+#>  1 65000     新北市 1620493 4017632 1961812 2055820 六都  
+#>  2 63000     臺北市 1057327 2544720 1211361 1333359 六都  
+#>  3 68000     桃園市  860144 2272812 1125649 1147163 六都  
+#>  4 66000     臺中市 1014864 2816393 1382499 1433894 六都  
+#>  5 67000     臺南市  709627 1866073  929345  936728 非六都
+#>  6 64000     高雄市 1128474 2751317 1356111 1395206 六都  
+#>  7 10002     宜蘭縣  174071  451422  227385  224037 非六都
+#>  8 10004     新竹縣  209962  574512  293279  281233 非六都
+#>  9 10005     苗栗縣  195208  539361  278012  261349 非六都
+#> 10 10007     彰化縣  398859 1257992  639195  618797 非六都
+```
+
+(3) add columns：請利用 `df_pop2` 增加新欄位`region`，將縣市分為北部、中部、南部、東部、福建，具體歸類我也不會，請參考國發會的[說法](https://www.ndc.gov.tw/nc_77_4402)，將結果存在 `df_pop3` 裡面後，印出前 10 列。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 10 × 8
+#>    county_id county   h_cnt   p_cnt   m_cnt   f_cnt city   region
+#>    <chr>     <chr>    <dbl>   <dbl>   <dbl>   <dbl> <chr>  <chr> 
+#>  1 65000     新北市 1620493 4017632 1961812 2055820 六都   北部  
+#>  2 63000     臺北市 1057327 2544720 1211361 1333359 六都   北部  
+#>  3 68000     桃園市  860144 2272812 1125649 1147163 六都   北部  
+#>  4 66000     臺中市 1014864 2816393 1382499 1433894 六都   中部  
+#>  5 67000     臺南市  709627 1866073  929345  936728 非六都 南部  
+#>  6 64000     高雄市 1128474 2751317 1356111 1395206 六都   南部  
+#>  7 10002     宜蘭縣  174071  451422  227385  224037 非六都 北部  
+#>  8 10004     新竹縣  209962  574512  293279  281233 非六都 北部  
+#>  9 10005     苗栗縣  195208  539361  278012  261349 非六都 中部  
+#> 10 10007     彰化縣  398859 1257992  639195  618797 非六都 中部
+```
+
+(4) counting: 請幫我計算 `df_pop3` 中，各個 region 中有多少筆資料，並將結果依照資料數量由多到少排列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 5 × 2
+#>   region     n
+#>   <chr>  <int>
+#> 1 北部       7
+#> 2 南部       6
+#> 3 中部       5
+#> 4 東部       2
+#> 5 福建       2
+```
+
+(5) keep columns needed and filtering：請先幫我篩選出「屬於六都且戶數大於 100 萬」或者「不屬於六都且人口數小於 30 萬」的縣市，最後幫我留下 `county`, `city`, `h_cnt` 3 個欄位，並將結果印出。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 9 × 8
+#>   county_id county   h_cnt   p_cnt   m_cnt   f_cnt city   region
+#>   <chr>     <chr>    <dbl>   <dbl>   <dbl>   <dbl> <chr>  <chr> 
+#> 1 65000     新北市 1620493 4017632 1961812 2055820 六都   北部  
+#> 2 63000     臺北市 1057327 2544720 1211361 1333359 六都   北部  
+#> 3 66000     臺中市 1014864 2816393 1382499 1433894 六都   中部  
+#> 4 64000     高雄市 1128474 2751317 1356111 1395206 六都   南部  
+#> 5 10014     臺東縣   84102  213818  109771  104047 非六都 東部  
+#> 6 10016     澎湖縣   42245  106036   54583   51453 非六都 南部  
+#> 7 10020     嘉義市  101811  265002  128026  136976 非六都 南部  
+#> 8 09020     金門縣   42415  140856   70209   70647 非六都 福建  
+#> 9 09007     連江縣    3489   13429    7771    5658 非六都 福建
+```
