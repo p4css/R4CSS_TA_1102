@@ -1628,7 +1628,7 @@ values。</li>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="do">### result</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 要有程式碼呈現 NA 數目</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 接著文字敘述 e.g. 完美，都沒有 missing values</span></span></code></pre></div>
-<ol start="2" style="list-style-type: decimal">
+<ol start="3" style="list-style-type: decimal">
 <li>calculate means：請計算這包資料中的平均屋齡，不過會遇到 missing
 values，請你想想怎麼做比較好，決定後解釋你怎麼選擇。</li>
 </ol>
@@ -1637,7 +1637,7 @@ values，請你想想怎麼做比較好，決定後解釋你怎麼選擇。</li>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="do">### result</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 要有程式碼呈現平均屋齡</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 接著文字解釋</span></span></code></pre></div>
-<ol start="3" style="list-style-type: decimal">
+<ol start="4" style="list-style-type: decimal">
 <li>deal with missing values：遇到 missing
 values，是要踢掉那筆資料嗎？還是可以用某些值填上？請針對<code>電梯</code>欄位，解釋先以文字敘述你會怎麼選擇怎麼處理、理由為何，接著用程式碼實作，並將結果存到
 <code>df_house_clean</code>，再將最後 3
@@ -1653,31 +1653,34 @@ values，是要踢掉那筆資料嗎？還是可以用某些值填上？請針�
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 羅斯福路三段２６９巷７２號二樓      3450      43.1 華廈(10層含以下…    NA 有   </span></span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 羅斯福路三段９９號十樓之３          2208      18.5 住宅大樓(11層含…    22 有   </span></span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 羅斯福路四段１１９巷３０號六樓      3110      50.8 華廈(10層含以下…    34 有</span></span></code></pre></div>
-<ol start="4" style="list-style-type: decimal">
-<li>calculate number：請幫我增加 <code>price_avg</code>
-欄位，計算各間房屋的每坪價格，把結果存在
+<ol start="5" style="list-style-type: decimal">
+<li>calculate number：請幫我增加 <code>price_ping</code>
+欄位，計算各間房屋的「每坪單價」，把結果存在
 <code>df_house_price</code>，並將前 3 列印出。</li>
 </ol>
+<ul>
+<li>提示：每坪單價 = 總價/面積</li>
+</ul>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="do">### your code</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="do">### result</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 7</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   地段位置或門牌               總價_萬元 總面積_坪 型態     屋齡 電梯  price_avg</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   地段位置或門牌               總價_萬元 總面積_坪 型態     屋齡 電梯  price_ping</span></span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                            &lt;dbl&gt;     &lt;dbl&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;     &lt;dbl&gt;</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 羅斯福路三段５７號四樓            3956      34.6 住宅大…     5 有        115. </span></span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 羅斯福路三段３３３巷２號四樓      1250      20.6 公寓(5…    NA 無         60.7</span></span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 羅斯福路三段２２７號二樓之２      3800      54.4 住宅大…    33 有         69.9</span></span></code></pre></div>
-<ol start="5" style="list-style-type: decimal">
+<ol start="6" style="list-style-type: decimal">
 <li>keep columns needed and filtering：請先幫我篩選出總價超過 2000
 萬元的房屋，接著篩選出平均每坪價格小於 80 萬元的房屋，最後幫我留下
-<code>地段位置或門牌</code>, <code>電梯</code>, <code>price_avg</code> 3
-個欄位，並將結果印出。</li>
+<code>地段位置或門牌</code>, <code>電梯</code>, <code>price_ping</code>
+3 個欄位，並將結果印出。</li>
 </ol>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">### your code</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="do">### result</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 3</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   地段位置或門牌                 電梯  price_avg</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   地段位置或門牌                 電梯  price_ping</span></span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                          &lt;chr&gt;     &lt;dbl&gt;</span></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 羅斯福路三段２２７號二樓之２   有         69.9</span></span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 羅斯福路二段６７號地下室       有         29.2</span></span>
@@ -1709,6 +1712,9 @@ SEGIS，內容是 110 年 9
 增加新欄位<code>city</code>，若為六都則為”六都”，六都以外為
 “非六都”，將結果存在 <code>df_pop2</code> 裡面後，印出前 10 列。</li>
 </ol>
+<ul>
+<li>提示：<code>if_else()</code></li>
+</ul>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">### your code</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="do">### result</span></span>
@@ -1719,70 +1725,46 @@ SEGIS，內容是 110 年 9
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 63000     臺北市 1057327 2544720 1211361 1333359 六都  </span></span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 68000     桃園市  860144 2272812 1125649 1147163 六都  </span></span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 66000     臺中市 1014864 2816393 1382499 1433894 六都  </span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 67000     臺南市  709627 1866073  929345  936728 非六都</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 67000     臺南市  709627 1866073  929345  936728 六都</span></span>
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 64000     高雄市 1128474 2751317 1356111 1395206 六都  </span></span>
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 10002     宜蘭縣  174071  451422  227385  224037 非六都</span></span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 10004     新竹縣  209962  574512  293279  281233 非六都</span></span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 10005     苗栗縣  195208  539361  278012  261349 非六都</span></span>
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 10007     彰化縣  398859 1257992  639195  618797 非六都</span></span></code></pre></div>
 <ol start="3" style="list-style-type: decimal">
-<li>add columns：請利用 <code>df_pop2</code>
-增加新欄位<code>region</code>，將縣市分為北部、中部、南部、東部、福建，具體歸類我也不會，請參考國發會的<a href="https://www.ndc.gov.tw/nc_77_4402">說法</a>，將結果存在
-<code>df_pop3</code> 裡面後，印出前 10 列。</li>
+<li>counting: 請幫我計算 <code>df_pop2</code>
+中，六都與非六都中有多少筆資料，並將結果依照資料數量由多到少排列</li>
 </ol>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">### your code</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="do">### result</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 10 × 8</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    county_id county   h_cnt   p_cnt   m_cnt   f_cnt city   region</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;     &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt; </span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1 65000     新北市 1620493 4017632 1961812 2055820 六都   北部  </span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 63000     臺北市 1057327 2544720 1211361 1333359 六都   北部  </span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 68000     桃園市  860144 2272812 1125649 1147163 六都   北部  </span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 66000     臺中市 1014864 2816393 1382499 1433894 六都   中部  </span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 67000     臺南市  709627 1866073  929345  936728 非六都 南部  </span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 64000     高雄市 1128474 2751317 1356111 1395206 六都   南部  </span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 10002     宜蘭縣  174071  451422  227385  224037 非六都 北部  </span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 10004     新竹縣  209962  574512  293279  281233 非六都 北部  </span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 10005     苗栗縣  195208  539361  278012  261349 非六都 中部  </span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 10007     彰化縣  398859 1257992  639195  618797 非六都 中部</span></span></code></pre></div>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   city       n</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;  &lt;int&gt;</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 非六都    16</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 六都       6</span></span></code></pre></div>
 <ol start="4" style="list-style-type: decimal">
-<li>counting: 請幫我計算 <code>df_pop3</code> 中，各個 region
-中有多少筆資料，並將結果依照資料數量由多到少排列</li>
+<li>keep columns needed and
+filtering：請先幫我篩選出「屬於六都且戶數大於 100
+萬」或者「不屬於六都且人口數小於 30 萬」的縣市，最後幫我留下
+<code>county</code>, <code>city</code>, <code>h_cnt</code>,
+<code>p_cnt</code> 4 個欄位，並將結果印出。</li>
 </ol>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="do">### your code</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="do">### result</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 2</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   region     n</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;  &lt;int&gt;</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 北部       7</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 南部       6</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 中部       5</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 東部       2</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 福建       2</span></span></code></pre></div>
-<ol start="5" style="list-style-type: decimal">
-<li>keep columns needed and
-filtering：請先幫我篩選出「屬於六都且戶數大於 100
-萬」或者「不屬於六都且人口數小於 30 萬」的縣市，最後幫我留下
-<code>county</code>, <code>city</code>, <code>h_cnt</code> 3
-個欄位，並將結果印出。</li>
-</ol>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">### your code</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="do">### result</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 8</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   county_id county   h_cnt   p_cnt   m_cnt   f_cnt city   region</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;     &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt; </span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 65000     新北市 1620493 4017632 1961812 2055820 六都   北部  </span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 63000     臺北市 1057327 2544720 1211361 1333359 六都   北部  </span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 66000     臺中市 1014864 2816393 1382499 1433894 六都   中部  </span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 64000     高雄市 1128474 2751317 1356111 1395206 六都   南部  </span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 10014     臺東縣   84102  213818  109771  104047 非六都 東部  </span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 10016     澎湖縣   42245  106036   54583   51453 非六都 南部  </span></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 10020     嘉義市  101811  265002  128026  136976 非六都 南部  </span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 09020     金門縣   42415  140856   70209   70647 非六都 福建  </span></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9 09007     連江縣    3489   13429    7771    5658 非六都 福建</span></span></code></pre></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 9 × 4</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   county city     h_cnt   p_cnt</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 新北市 六都   1620493 4017632</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 臺北市 六都   1057327 2544720</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 臺中市 六都   1014864 2816393</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 高雄市 六都   1128474 2751317</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 臺東縣 非六都   84102  213818</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 澎湖縣 非六都   42245  106036</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 嘉義市 非六都  101811  265002</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 金門縣 非六都   42415  140856</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9 連江縣 非六都    3489   13429</span></span></code></pre></div>
 </div>
 </div>
 
