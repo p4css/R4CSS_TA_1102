@@ -3,7 +3,7 @@
 ### week06_03/24
 
 * AS 03 Homework Data Manipulation & Joining [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS03_Homework_data-manipulation-joining.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS03_Homework_data-manipulation-joining.html) 
-* AS 02 Reference Know Your Data [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/), [html](https://p4css.github.io/R4CSS_TA_1102/) 
+* AS 02 Reference Know Your Data [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS02_Homework_know-your-data_ref.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS02_Homework_know-your-data_ref.html) 
 
 
 ### week05_03/17
