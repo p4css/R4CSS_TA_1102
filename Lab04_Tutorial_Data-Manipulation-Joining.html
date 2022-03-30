@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lab04_Data-Manipulation-Joining</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="曾子軒 Dennis Tseng" />
+    <script src="libs/header-attrs-2.13/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lab04_Data-Manipulation-Joining
+## Lab04_grouping-joining-tidyr
+### 曾子軒 Dennis Tseng
+### 台大新聞所 NTU Journalism
+### 2022/03/31
+
+---
+
+&lt;style type="text/css"&gt;
+
+.remark-slide-content {
+    padding: 1em 1em 1em 1em;
+    font-size: 28px;
+}
+
+.my-one-page-font {
+  padding: 1em 1em 1em 1em;
+  font-size: 20px;
+  /*xaringan::inf_mr()*/
+}
+
+&lt;/style&gt;
+
+
+# 今日重點
+
+- `library(dplyr)`
+- `library(tidyr)`
+
+---
+
+# 今天用的檔案
+
+
+
+```r
+library(tidyverse)
+```
+
+```
+## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+```
+
+```
+## ✓ ggplot2 3.3.5          ✓ purrr   0.3.4     
+## ✓ tibble  3.1.4          ✓ dplyr   1.0.7     
+## ✓ tidyr   1.1.2          ✓ stringr 1.4.0.9000
+## ✓ readr   1.4.0          ✓ forcats 0.5.1
+```
+
+```
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+```
+
+```r
+df_main_clean &lt;- read_csv("data/Lab04/df_main_clean.csv") %&gt;% select(board, type, title, date, comments)
+```
+
+```
+## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   board = col_character(),
+##   type = col_character(),
+##   title = col_character(),
+##   date = col_date(format = ""),
+##   comments = col_double(),
+##   author = col_character(),
+##   text = col_character(),
+##   IP = col_character(),
+##   link = col_character(),
+##   time = col_datetime(format = "")
+## )
+```
+
+```r
+df_main_clean2 &lt;- read.csv("data/Lab04/df_main_clean.csv") %&gt;% select(board, type, title, date, comments)
+```
+
+---
+
+# data importing: 推薦 readr 套件的理由
+
+1. 讀進來預設就是 tibble
+2. 函數很聰明，會去猜測每個 column 是什麼 type
+3. 預設編碼是 UTF8，可以避免許多問題
+4. 讀檔效率較佳，當資料筆數超過十萬會有明顯差異
+5. 提供較多元的參數可供挑選
+
+---
+# 作業檢討: 推薦 readr 套件的理由
+
+- 遇上中文的時候
+- 欄位型態不同
+
+
+```r
+df_main_clean %&gt;% head(5)
+```
+
+```
+## # A tibble: 5 × 5
+##   board      type   title                                    date       comments
+##   &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;                                    &lt;date&gt;        &lt;dbl&gt;
+## 1 KoreaDrama [公告] Fw: [公告] 您有一封未讀取的重要信件 請…  2021-01-18       20
+## 2 KoreaDrama [新聞] [新聞] 柳惠英有望演出《直到清晨》        2021-01-18        5
+## 3 KoreaDrama [閒聊] [閒聊]  Penthouse 上流戰爭第一季（雷）   2021-01-18      101
+## 4 KoreaDrama [新聞] [新聞] 孫錫久有望演出APPLE TV+《Alpha R… 2021-01-18        9
+## 5 KoreaDrama [LIVE] [LIVE] JTBC 前輩，那支口紅不要塗 EP01-E… 2021-01-18      249
+```
+
+```r
+df_main_clean2 %&gt;% head(5)
+```
+
+```
+##        board   type                                         title       date
+## 1 KoreaDrama [公告]    Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18
+## 2 KoreaDrama [新聞]             [新聞] 柳惠英有望演出《直到清晨》 2021-01-18
+## 3 KoreaDrama [閒聊]        [閒聊]  Penthouse 上流戰爭第一季（雷） 2021-01-18
+## 4 KoreaDrama [新聞] [新聞] 孫錫久有望演出APPLE TV+《Alpha Romeo》 2021-01-18
+## 5 KoreaDrama [LIVE]    [LIVE] JTBC 前輩，那支口紅不要塗 EP01-EP02 2021-01-18
+##   comments
+## 1       20
+## 2        5
+## 3      101
+## 4        9
+## 5      249
+```
+
+---
+
+# dplyr: 修改欄位名稱
+
+- `rename()`
+- `select()`
+- `mutate()`
+
+
+```r
+df_main_clean %&gt;% rename(ban = board) %&gt;% head(5)
+df_main_clean %&gt;% select(ban = board) %&gt;% head(5)
+df_main_clean %&gt;% mutate(ban = board) %&gt;% head(5)
+```
+
+---
+
+
+# dplyr: 選擇欄位
+
+- 懶人的福音，幫助你快速選 column
+- operator: `:`, `!`, `&amp;`, `|`, `c()`
+- selection helpers: 
+      - specific columns: `everything()`, `last_col()`
+      - matching patterns: `starts_with()`, `ends_with()`, `contains()`, `matches()`, `num_range()`
+
+---
+
+# dplyr: 選擇欄位
+
+- operator: `:`, `!`, `&amp;`, `|`, `c()`
+
+
+```r
+df_main_clean %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 5
+##   board      type   title                                      date       comments
+##   &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;                                      &lt;date&gt;        &lt;dbl&gt;
+## 1 KoreaDrama [公告] Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18       20
+```
+
+```r
+df_main_clean %&gt;% select(type:date) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 3
+##   type   title                                      date      
+##   &lt;chr&gt;  &lt;chr&gt;                                      &lt;date&gt;    
+## 1 [公告] Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18
+```
+
+```r
+df_main_clean %&gt;% select(1:2, 4) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 3
+##   board      type   date      
+##   &lt;chr&gt;      &lt;chr&gt;  &lt;date&gt;    
+## 1 KoreaDrama [公告] 2021-01-18
+```
+
+```r
+df_main_clean %&gt;% select(!title) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 4
+##   board      type   date       comments
+##   &lt;chr&gt;      &lt;chr&gt;  &lt;date&gt;        &lt;dbl&gt;
+## 1 KoreaDrama [公告] 2021-01-18       20
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- specific columns: `everything()`, `last_col()`
+
+
+```r
+df_main_clean %&gt;% select(comments, everything()) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 5
+##   comments board      type   title                                      date      
+##      &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;                                      &lt;date&gt;    
+## 1       20 KoreaDrama [公告] Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18
+```
+
+```r
+df_main_clean %&gt;% select(-board, everything(), board) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 5
+##   type   title                                      date       comments board   
+##   &lt;chr&gt;  &lt;chr&gt;                                      &lt;date&gt;        &lt;dbl&gt; &lt;chr&gt;   
+## 1 [公告] Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18       20 KoreaDr…
+```
+
+---
+
+# dplyr: 排序欄位
+
+- specific columns: `everything()`, `last_col()`
+
+
+```r
+df_main_clean %&gt;% relocate(comments) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 5
+##   comments board      type   title                                      date      
+##      &lt;dbl&gt; &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;                                      &lt;date&gt;    
+## 1       20 KoreaDrama [公告] Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18
+```
+
+```r
+df_main_clean %&gt;% relocate(comments, .after = board) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 5
+##   board      comments type   title                                      date      
+##   &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;                                      &lt;date&gt;    
+## 1 KoreaDrama       20 [公告] Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18
+```
+
+```r
+df_main_clean %&gt;% relocate(comments, .before = title) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 5
+##   board      type   comments title                                      date      
+##   &lt;chr&gt;      &lt;chr&gt;     &lt;dbl&gt; &lt;chr&gt;                                      &lt;date&gt;    
+## 1 KoreaDrama [公告]       20 Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- specific columns: `everything()`, `last_col()`
+
+
+```r
+df_main_clean %&gt;% select(last_col()) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 1
+##   comments
+##      &lt;dbl&gt;
+## 1       20
+```
+
+```r
+df_main_clean %&gt;% select(1:last_col()) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 5
+##   board      type   title                                      date       comments
+##   &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;                                      &lt;date&gt;        &lt;dbl&gt;
+## 1 KoreaDrama [公告] Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18       20
+```
+
+```r
+df_main_clean %&gt;% select(1:last_col(1)) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 4
+##   board      type   title                                      date      
+##   &lt;chr&gt;      &lt;chr&gt;  &lt;chr&gt;                                      &lt;date&gt;    
+## 1 KoreaDrama [公告] Fw: [公告] 您有一封未讀取的重要信件 請查閱 2021-01-18
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- matching patterns: `starts_with()`, `ends_with()`, `contains()`, `matches()`, `num_range()`
+
+
+```r
+df_main_clean %&gt;% select(starts_with("marry")) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 0
+```
+
+```r
+df_main_clean %&gt;% select(starts_with(c("marry_cp", "county"))) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 0
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- matching patterns: `starts_with()`, `ends_with()`, `contains()`, `matches()`, `num_range()`
+- `contains()` 放字串
+
+
+```r
+df_main_clean %&gt;% select(contains("comm")) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 1
+##   comments
+##      &lt;dbl&gt;
+## 1       20
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- matching patterns: `starts_with()`, `ends_with()`, `contains()`, `matches()`, `num_range()`
+- `matches()` 放正規表示式
+
+
+```r
+df_main_clean %&gt;% select(matches("com.*nt")) %&gt;% slice(1)
+```
+
+```
+## # A tibble: 1 × 1
+##   comments
+##      &lt;dbl&gt;
+## 1       20
+```
+
+---
+
+# dplyr: 判斷區間
+
+- `if_else()` and `case_when()`
+ - 常常與 `mutate()` 搭配判斷條件用，`NA` 無法判斷要特別處理
+ - `if_else(條件, TRUE 的值, FALSE 的值)`
+ - `case_when(條件 ~ 滿足條件的值, 最後有一個類似 else 的東西)`
+
+
+```r
+df_main_clean %&gt;% 
+  mutate(comments_interval = if_else(comments &lt; 60, "&lt;60", "&gt;=60")) %&gt;%
+  mutate(comments_interval = if_else(comments &gt;= 70 &amp; comments_interval == "&gt;=60", "&gt;=70", comments_interval)) %&gt;%
+  count(comments_interval)
+```
+
+
+---
+
+# dplyr: 判斷區間
+
+- `if_else()` and `case_when()`
+ - 常常與 `mutate()` 搭配判斷條件用，`NA` 無法判斷要特別處理
+ - `if_else(條件, TRUE 的值, FALSE 的值)`
+ - `case_when(條件 ~ 滿足條件的值, 最後有一個類似 else 的東西)`
+
+
+```r
+df_main_clean %&gt;% 
+  mutate(comments_interval = case_when(
+    # 條件寫左邊，中間用 ~ 連接，右邊放數值
+    comments &lt; 60 ~ "&lt;60",
+    comments &gt;= 60 &amp; comments &lt; 70 ~ "&gt;=60",
+    comments &gt;= 70 ~ "&gt;=70",
+    # 最後是 TRUE ~ 值 作結，放 else 的內容
+    TRUE ~ "others"
+  )) %&gt;%
+  count(comments_interval)
+```
+
+---
+
+# dplyr: 取 subset
+
+- 取出特定的 row
+ - `slice()`
+ - `row_number()`
+
+
+```r
+df_main_clean %&gt;% slice(11:12)
+df_main_clean %&gt;% filter(row_number() == 10)
+```
+
+---
+
+# dplyr: group and summarize
+
+- `summarize()`
+ - 產出一個總結後的 dataframe
+ - 若有先 `group_by()`，會產出各組的總結
+- `group_by()`
+ - 把 dataframe 變成 grouped dataframe，長相相同
+ - group 之後使用動詞
+ - 比較：有 `group_by()` 和沒 `group_by()`
+
+---
+# dplyr: group and summarize
+
+
+```r
+df_main_clean %&gt;% 
+  summarise(comments = max(comments, na.rm = T))
+```
+
+```
+## # A tibble: 1 × 1
+##   comments
+##      &lt;dbl&gt;
+## 1     1499
+```
+
+
+```r
+df_main_clean %&gt;% group_by(board) %&gt;%
+  summarise(comments = max(comments, na.rm = T))
+```
+
+```
+## # A tibble: 4 × 2
+##   board       comments
+##   &lt;chr&gt;          &lt;dbl&gt;
+## 1 China-Drama      825
+## 2 EAseries        1499
+## 3 KoreaDrama      1498
+## 4 TaiwanDrama     1413
+```
+
+---
+# dplyr: group and summarize
+
+- `ungroup()`
+ - 把 grouped 的狀態消除變回原本的
+ - 有時候會需要先 `group_by()` 再 `ungroup()`
+ - 底下來看  `summarize()`, `group_by()` and `ungroup()` 的應用
+ 
+ 
+---
+# dplyr: group and summarize
+
+- 舉例
+ - 計算各子板、各類型文章數量的**佔比**
+ - 取出**各子板**當中文章佔該板最高的類型 
+ - 取出**不分子板**當中文章佔該板最高的類型 
+
+---
+# dplyr: group and summarize
+
+- 舉例
+ - 計算各子板、各類型文章數量的**佔比**
+ 
+
+```r
+df_main_clean %&gt;% group_by(board, type) %&gt;%
+  summarise(n = n()) %&gt;%
+  mutate(per = n/sum(n))
+```
+
+```
+## # A tibble: 60 × 4
+## # Groups:   board [4]
+##    board       type       n     per
+##    &lt;chr&gt;       &lt;chr&gt;  &lt;int&gt;   &lt;dbl&gt;
+##  1 China-Drama [Live]    45 0.125  
+##  2 China-Drama [公告]     4 0.0111 
+##  3 China-Drama [創作]     9 0.0249 
+##  4 China-Drama [問題]    33 0.0914 
+##  5 China-Drama [心得]   128 0.355  
+##  6 China-Drama [情報]    12 0.0332 
+##  7 China-Drama [新聞]     9 0.0249 
+##  8 China-Drama [板務]     1 0.00277
+##  9 China-Drama [求薦]     7 0.0194 
+## 10 China-Drama [討論]     1 0.00277
+## # … with 50 more rows
+```
+
+---
+# group and summarize
+
+- 舉例
+ - 取出**各子板**當中文章佔該板最高的類型 
+ 
+
+```r
+df_main_clean %&gt;% group_by(board, type) %&gt;%
+  summarise(n = n()) %&gt;%
+  mutate(per = n/sum(n)) %&gt;%
+  filter(per == max(per))
+```
+
+```
+## # A tibble: 4 × 4
+## # Groups:   board [4]
+##   board       type       n   per
+##   &lt;chr&gt;       &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt;
+## 1 China-Drama [心得]   128 0.355
+## 2 EAseries    [新聞]   123 0.321
+## 3 KoreaDrama  [心得]    98 0.266
+## 4 TaiwanDrama [LIVE]   105 0.305
+```
+
+---
+# group and summarize
+
+- 舉例
+ - 取出**不分子板**當中文章佔該板最高的類型 
+ 
+
+```r
+df_main_clean %&gt;% group_by(board, type) %&gt;%
+  summarise(n = n()) %&gt;% ungroup() %&gt;%
+  mutate(per = n/sum(n)) %&gt;%
+  filter(per == max(per))
+```
+
+```
+## # A tibble: 1 × 4
+##   board       type       n    per
+##   &lt;chr&gt;       &lt;chr&gt;  &lt;int&gt;  &lt;dbl&gt;
+## 1 China-Drama [心得]   128 0.0879
+```
+
+---
+
+# group and summarize
+
+- 舉例
+ - 取出**各子板**當中文章佔該板**次高**的類型 
+ 
+
+```r
+df_main_clean %&gt;% group_by(board, type) %&gt;%
+  summarise(n = n()) %&gt;%
+  mutate(per = n/sum(n)) %&gt;%
+  arrange(board, desc(per)) %&gt;%
+  filter(row_number() == 2)
+```
+
+```
+## # A tibble: 4 × 4
+## # Groups:   board [4]
+##   board       type       n   per
+##   &lt;chr&gt;       &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt;
+## 1 China-Drama [閒聊]   110 0.305
+## 2 EAseries    [心得]   109 0.285
+## 3 KoreaDrama  [LIVE]    87 0.236
+## 4 TaiwanDrama [心得]    57 0.166
+```
+
+---
+# group and summarize
+
+- 舉例
+ - 取出**不分子板**當中文章佔該板**次高**的類型 
+ 
+
+```r
+df_main_clean %&gt;% group_by(board, type) %&gt;%
+  summarise(n = n()) %&gt;% ungroup() %&gt;%
+  mutate(per = n/sum(n)) %&gt;%
+  arrange(desc(per)) %&gt;%
+  filter(row_number() == 2)
+```
+
+```
+## # A tibble: 1 × 4
+##   board    type       n    per
+##   &lt;chr&gt;    &lt;chr&gt;  &lt;int&gt;  &lt;dbl&gt;
+## 1 EAseries [新聞]   123 0.0844
+```
+ 
+---
+# dplyr: group and summarize
+
+- 算不重複的數量
+ - `distinct()` &amp; `n_distinct()`
+ - 算出**各子板**有多少不重複發文天數
+
+
+```r
+df_main_clean %&gt;% group_by(board) %&gt;%
+  summarise(n = n_distinct(date))
+```
+
+```
+## # A tibble: 4 × 2
+##   board           n
+##   &lt;chr&gt;       &lt;int&gt;
+## 1 China-Drama    81
+## 2 EAseries       48
+## 3 KoreaDrama     47
+## 4 TaiwanDrama    67
+```
+ 
+---
+# dplyr: group and summarize
+
+- 算不重複的數量
+ - `distinct()` &amp; `n_distinct()`
+ - 算出**各子板**有多少不重複發文天數
+
+
+```r
+df_main_clean %&gt;% distinct(board, date) %&gt;%
+  count(board)
+```
+
+```
+## # A tibble: 4 × 2
+##   board           n
+##   &lt;chr&gt;       &lt;int&gt;
+## 1 China-Drama    81
+## 2 EAseries       48
+## 3 KoreaDrama     47
+## 4 TaiwanDrama    67
+```
+
+---
+# tidy data
+
+- Pivoting
+ - `pivot_longer()` 把資料變成長表格
+ - `cols` = 放進去的欄位, `names_to` = 名稱欄位叫做什麼, `values_to` = 值欄位叫做什麼
+ - 多注意一個參數 `values_drop_na` 預設為 FALSE
+ - `pivot_wider()` 把資料變成寬表格
+ - `id_cols` = 不要動的欄位, `names_from` = 名稱來自哪, `values_from` = 值來自哪
+ - 多注意一個參數 `values_fill`
+ 
+
+---
+# tidy data
+
+- df_main_agg 是一個 wide data
+
+
+```r
+df_main_agg &lt;- df_main_clean %&gt;% group_by(board) %&gt;%
+  summarise(article = n(), comments = sum(comments))
+
+df_main_agg
+```
+
+```
+## # A tibble: 4 × 3
+##   board       article comments
+##   &lt;chr&gt;         &lt;int&gt;    &lt;dbl&gt;
+## 1 China-Drama     361    38491
+## 2 EAseries        383    12397
+## 3 KoreaDrama      369    61846
+## 4 TaiwanDrama     344    24864
+```
+
+---
+# tidy data
+
+- 把它變長
+
+```r
+df_main_agg_long &lt;- 
+  df_main_agg %&gt;% 
+  pivot_longer(cols = -board, names_to = "type", values_to = "n")
+
+df_main_agg_long
+```
+
+```
+## # A tibble: 8 × 3
+##   board       type         n
+##   &lt;chr&gt;       &lt;chr&gt;    &lt;dbl&gt;
+## 1 China-Drama article    361
+## 2 China-Drama comments 38491
+## 3 EAseries    article    383
+## 4 EAseries    comments 12397
+## 5 KoreaDrama  article    369
+## 6 KoreaDrama  comments 61846
+## 7 TaiwanDrama article    344
+## 8 TaiwanDrama comments 24864
+```
+
+---
+# tidy data
+
+- 把它變寬
+
+
+```r
+df_main_agg_wide &lt;- 
+  df_main_agg_long %&gt;%
+  pivot_wider(id = board, names_from = type, values_from = n, values_fill = list(n = 0))
+
+df_main_agg_wide
+```
+
+```
+## # A tibble: 4 × 3
+##   board       article comments
+##   &lt;chr&gt;         &lt;dbl&gt;    &lt;dbl&gt;
+## 1 China-Drama     361    38491
+## 2 EAseries        383    12397
+## 3 KoreaDrama      369    61846
+## 4 TaiwanDrama     344    24864
+```
+
+---
+# tidy data
+
+- Splitting and Combining
+ - `separate()` 把一個欄位切開(split)成多個欄位
+ - `unite()` 把多個欄位合併(combine)成多個欄位
+ - `col` = 要動的欄位, `into` = 要變成什麼名字, `sep` = 切分的符號, `remove` = 是否要保留原本的欄位
+
+---
+
+# tidy data
+- 把它合併
+
+```r
+df_main_sep &lt;- 
+  df_main_agg %&gt;% 
+  unite(col = "metric", 2:3, sep = "-")
+
+df_main_sep
+```
+
+```
+## # A tibble: 4 × 2
+##   board       metric   
+##   &lt;chr&gt;       &lt;chr&gt;    
+## 1 China-Drama 361-38491
+## 2 EAseries    383-12397
+## 3 KoreaDrama  369-61846
+## 4 TaiwanDrama 344-24864
+```
+
+---
+# tidy data
+
+- 把它切開
+
+
+```r
+df_main_uni &lt;- 
+  df_main_sep %&gt;%
+  separate(col = metric, into = c("article", "comments"))
+
+df_main_uni
+```
+
+```
+## # A tibble: 4 × 3
+##   board       article comments
+##   &lt;chr&gt;       &lt;chr&gt;   &lt;chr&gt;   
+## 1 China-Drama 361     38491   
+## 2 EAseries    383     12397   
+## 3 KoreaDrama  369     61846   
+## 4 TaiwanDrama 344     24864
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"self_contained": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

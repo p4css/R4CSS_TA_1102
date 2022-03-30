@@ -1,0 +1,450 @@
+---
+title: "Lab04_Data-Manipulation-Joining"
+subtitle: "Lab04_grouping-joining-tidyr"
+author: "曾子軒 Dennis Tseng"
+institute: "台大新聞所 NTU Journalism"
+date: "2022/03/31"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      self_contained: true
+---
+<style type="text/css">
+
+.remark-slide-content {
+    padding: 1em 1em 1em 1em;
+    font-size: 28px;
+}
+
+.my-one-page-font {
+  padding: 1em 1em 1em 1em;
+  font-size: 20px;
+  /*xaringan::inf_mr()*/
+}
+
+</style>
+
+
+# 今日重點
+
+- `library(dplyr)`
+- `library(tidyr)`
+
+---
+
+# 今天用的檔案
+
+
+```{r message=T, warning=F}
+library(tidyverse)
+df_main_clean <- read_csv("data/Lab04/df_main_clean.csv") %>% select(board, type, title, date, comments)
+df_main_clean2 <- read.csv("data/Lab04/df_main_clean.csv") %>% select(board, type, title, date, comments)
+```
+
+---
+
+# data importing: 推薦 readr 套件的理由
+
+1. 讀進來預設就是 tibble
+2. 函數很聰明，會去猜測每個 column 是什麼 type
+3. 預設編碼是 UTF8，可以避免許多問題
+4. 讀檔效率較佳，當資料筆數超過十萬會有明顯差異
+5. 提供較多元的參數可供挑選
+
+---
+# 作業檢討: 推薦 readr 套件的理由
+
+- 遇上中文的時候
+- 欄位型態不同
+
+```{r message=T, warning=F}
+df_main_clean %>% head(5)
+df_main_clean2 %>% head(5)
+```
+
+---
+
+# dplyr: 修改欄位名稱
+
+- `rename()`
+- `select()`
+- `mutate()`
+
+```{r message=F, warning=F, eval = F}
+df_main_clean %>% rename(ban = board) %>% head(5)
+df_main_clean %>% select(ban = board) %>% head(5)
+df_main_clean %>% mutate(ban = board) %>% head(5)
+```
+
+---
+
+
+# dplyr: 選擇欄位
+
+- 懶人的福音，幫助你快速選 column
+- operator: `:`, `!`, `&`, `|`, `c()`
+- selection helpers: 
+      - specific columns: `everything()`, `last_col()`
+      - matching patterns: `starts_with()`, `ends_with()`, `contains()`, `matches()`, `num_range()`
+
+---
+
+# dplyr: 選擇欄位
+
+- operator: `:`, `!`, `&`, `|`, `c()`
+
+```{r message=F, warning=F}
+df_main_clean %>% slice(1)
+df_main_clean %>% select(type:date) %>% slice(1)
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- operator: `:`, `!`, `&`, `|`, `c()`
+
+```{r message=F, warning=F}
+df_main_clean %>% select(1:2, 4) %>% slice(1)
+df_main_clean %>% select(!title) %>% slice(1)
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- specific columns: `everything()`, `last_col()`
+
+```{r message=F, warning=F}
+df_main_clean %>% select(comments, everything()) %>% slice(1)
+df_main_clean %>% select(-board, everything(), board) %>% slice(1)
+```
+
+---
+
+# dplyr: 排序欄位
+
+- specific columns: `everything()`, `last_col()`
+
+```{r message=F, warning=F}
+df_main_clean %>% relocate(comments) %>% slice(1)
+df_main_clean %>% relocate(comments, .after = board) %>% slice(1)
+df_main_clean %>% relocate(comments, .before = title) %>% slice(1)
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- specific columns: `everything()`, `last_col()`
+
+```{r message=F, warning=F}
+df_main_clean %>% select(last_col()) %>% slice(1)
+df_main_clean %>% select(1:last_col()) %>% slice(1)
+df_main_clean %>% select(1:last_col(1)) %>% slice(1)
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- matching patterns: `starts_with()`, `ends_with()`, `contains()`, `matches()`, `num_range()`
+
+```{r message=F, warning=F}
+df_main_clean %>% select(starts_with("com")) %>% slice(1)
+df_main_clean %>% select(starts_with(c("com", "tit"))) %>% slice(1)
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- matching patterns: `starts_with()`, `ends_with()`, `contains()`, `matches()`, `num_range()`
+- `contains()` 放字串
+
+```{r message=F, warning=F}
+df_main_clean %>% select(contains("comm")) %>% slice(1)
+```
+
+---
+
+# dplyr: 選擇欄位
+
+- matching patterns: `starts_with()`, `ends_with()`, `contains()`, `matches()`, `num_range()`
+- `matches()` 放正規表示式
+
+```{r message=F, warning=F}
+df_main_clean %>% select(matches("com.*nt")) %>% slice(1)
+```
+
+---
+
+# dplyr: 判斷區間
+
+- `if_else()` and `case_when()`
+ - 常常與 `mutate()` 搭配判斷條件用，`NA` 無法判斷要特別處理
+ - `if_else(條件, TRUE 的值, FALSE 的值)`
+ - `case_when(條件 ~ 滿足條件的值, 最後有一個類似 else 的東西)`
+
+```{r message=F, warning=F, eval = F}
+df_main_clean %>% 
+  mutate(comments_interval = if_else(comments < 60, "<60", ">=60")) %>%
+  mutate(comments_interval = if_else(comments >= 70 & comments_interval == ">=60", ">=70", comments_interval)) %>%
+  count(comments_interval)
+```
+
+
+---
+
+# dplyr: 判斷區間
+
+- `if_else()` and `case_when()`
+ - 常常與 `mutate()` 搭配判斷條件用，`NA` 無法判斷要特別處理
+ - `if_else(條件, TRUE 的值, FALSE 的值)`
+ - `case_when(條件 ~ 滿足條件的值, 最後有一個類似 else 的東西)`
+
+```{r message=F, warning=F, eval = F}
+df_main_clean %>% 
+  mutate(comments_interval = case_when(
+    # 條件寫左邊，中間用 ~ 連接，右邊放數值
+    comments < 60 ~ "<60",
+    comments >= 60 & comments < 70 ~ ">=60",
+    comments >= 70 ~ ">=70",
+    # 最後是 TRUE ~ 值 作結，放 else 的內容
+    TRUE ~ "others"
+  )) %>%
+  count(comments_interval)
+```
+
+---
+
+# dplyr: 取 subset
+
+- 取出特定的 row
+ - `slice()`
+ - `row_number()`
+
+```{r message=F, warning=F, eval = F}
+df_main_clean %>% slice(11:12)
+df_main_clean %>% filter(row_number() == 10)
+```
+
+---
+
+# dplyr: group and summarize
+
+- `summarize()`
+ - 產出一個總結後的 dataframe
+ - 若有先 `group_by()`，會產出各組的總結
+- `group_by()`
+ - 把 dataframe 變成 grouped dataframe，長相相同
+ - group 之後使用動詞
+ - 比較：有 `group_by()` 和沒 `group_by()`
+
+---
+# dplyr: group and summarize
+
+```{r message=F, warning=F}
+df_main_clean %>% 
+  summarise(comments = max(comments, na.rm = T))
+```
+
+```{r message=F, warning=F}
+df_main_clean %>% group_by(board) %>%
+  summarise(comments = max(comments, na.rm = T))
+```
+
+---
+# dplyr: group and summarize
+
+- `ungroup()`
+ - 把 grouped 的狀態消除變回原本的
+ - 有時候會需要先 `group_by()` 再 `ungroup()`
+ - 底下來看  `summarize()`, `group_by()` and `ungroup()` 的應用
+ 
+ 
+---
+# dplyr: group and summarize
+
+- 舉例
+ - 計算各子板、各類型文章數量的**佔比**
+ - 取出**各子板**當中文章佔該板最高的類型 
+ - 取出**不分子板**當中文章佔該板最高的類型 
+
+---
+# dplyr: group and summarize
+
+- 舉例
+ - 計算各子板、各類型文章數量的**佔比**
+ 
+```{r message=F, warning=F}
+df_main_clean %>% group_by(board, type) %>%
+  summarise(n = n()) %>%
+  mutate(per = n/sum(n))
+```
+
+---
+# group and summarize
+
+- 舉例
+ - 取出**各子板**當中文章佔該板最高的類型 
+ 
+```{r message=F, warning=F}
+df_main_clean %>% group_by(board, type) %>%
+  summarise(n = n()) %>%
+  mutate(per = n/sum(n)) %>%
+  filter(per == max(per))
+```
+
+---
+# group and summarize
+
+- 舉例
+ - 取出**不分子板**當中文章佔該板最高的類型 
+ 
+```{r message=F, warning=F}
+df_main_clean %>% group_by(board, type) %>%
+  summarise(n = n()) %>% ungroup() %>%
+  mutate(per = n/sum(n)) %>%
+  filter(per == max(per))
+```
+
+---
+
+# group and summarize
+
+- 舉例
+ - 取出**各子板**當中文章佔該板**次高**的類型 
+ 
+```{r message=F, warning=F}
+df_main_clean %>% group_by(board, type) %>%
+  summarise(n = n()) %>%
+  mutate(per = n/sum(n)) %>%
+  arrange(board, desc(per)) %>%
+  filter(row_number() == 2)
+```
+
+---
+# group and summarize
+
+- 舉例
+ - 取出**不分子板**當中文章佔該板**次高**的類型 
+ 
+```{r message=F, warning=F}
+df_main_clean %>% group_by(board, type) %>%
+  summarise(n = n()) %>% ungroup() %>%
+  mutate(per = n/sum(n)) %>%
+  arrange(desc(per)) %>%
+  filter(row_number() == 2)
+```
+ 
+---
+# dplyr: group and summarize
+
+- 算不重複的數量
+ - `distinct()` & `n_distinct()`
+ - 算出**各子板**有多少不重複發文天數
+
+```{r message=F, warning=F}
+df_main_clean %>% group_by(board) %>%
+  summarise(n = n_distinct(date))
+```
+ 
+---
+# dplyr: group and summarize
+
+- 算不重複的數量
+ - `distinct()` & `n_distinct()`
+ - 算出**各子板**有多少不重複發文天數
+
+```{r message=F, warning=F}
+df_main_clean %>% distinct(board, date) %>%
+  count(board)
+```
+
+---
+# tidy data
+
+- Pivoting
+ - `pivot_longer()` 把資料變成長表格
+ - `cols` = 放進去的欄位, `names_to` = 名稱欄位叫做什麼, `values_to` = 值欄位叫做什麼
+ - 多注意一個參數 `values_drop_na` 預設為 FALSE
+ - `pivot_wider()` 把資料變成寬表格
+ - `id_cols` = 不要動的欄位, `names_from` = 名稱來自哪, `values_from` = 值來自哪
+ - 多注意一個參數 `values_fill`
+ 
+
+---
+# tidy data
+
+- df_main_agg 是一個 wide data
+
+```{r message=F, warning=F}
+df_main_agg <- df_main_clean %>% group_by(board) %>%
+  summarise(article = n(), comments = sum(comments))
+
+df_main_agg
+```
+
+---
+# tidy data
+
+- 把它變長
+```{r message=F, warning=F}
+df_main_agg_long <- 
+  df_main_agg %>% 
+  pivot_longer(cols = -board, names_to = "type", values_to = "n")
+
+df_main_agg_long
+```
+
+---
+# tidy data
+
+- 把它變寬
+
+```{r message=F, warning=F}
+df_main_agg_wide <- 
+  df_main_agg_long %>%
+  pivot_wider(id = board, names_from = type, values_from = n, values_fill = list(n = 0))
+
+df_main_agg_wide
+```
+
+---
+# tidy data
+
+- Splitting and Combining
+ - `separate()` 把一個欄位切開(split)成多個欄位
+ - `unite()` 把多個欄位合併(combine)成多個欄位
+ - `col` = 要動的欄位, `into` = 要變成什麼名字, `sep` = 切分的符號, `remove` = 是否要保留原本的欄位
+
+---
+
+# tidy data
+- 把它合併
+```{r message=F, warning=F}
+df_main_sep <- 
+  df_main_agg %>% 
+  unite(col = "metric", 2:3, sep = "-")
+
+df_main_sep
+```
+
+---
+# tidy data
+
+- 把它切開
+
+```{r message=F, warning=F}
+df_main_uni <- 
+  df_main_sep %>%
+  separate(col = metric, into = c("article", "comments"))
+
+df_main_uni
+```

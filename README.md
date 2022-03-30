@@ -1,5 +1,11 @@
 # R4CSS_TA
 
+
+### week07_03/31
+
+* LAB 04 Tutorial Data Manipulation [slide](https://p4css.github.io/R4CSS_TA_1102/Lab04_Tutorial_Data-Manipulation-Joining.html) 
+* AS 03 Reference Data Manipulation & Joining [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/.html) 
+
 ### week06_03/24
 
 * AS 03 Homework Data Manipulation & Joining [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS03_Homework_data-manipulation-joining.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS03_Homework_data-manipulation-joining.html) 
