@@ -1,10 +1,14 @@
 # R4CSS_TA
 
 
+### week09_04/14
+
+* AS 04 Homework Visualizing Date & Time [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS04_Homework_Visualizing-Date-Time.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS04_Homework_Visualizing-Date-Time.html) 
+
 ### week07_03/31
 
 * LAB 04 Tutorial Data Manipulation [slide](https://p4css.github.io/R4CSS_TA_1102/Lab04_Tutorial_Data-Manipulation-Joining.html) 
-* AS 03 Reference Data Manipulation & Joining [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/.html) 
+* AS 03 Reference Data Manipulation & Joining [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS03_Homework_data-manipulation-joining_ref.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS03_Homework_data-manipulation-joining_ref.html) 
 
 ### week06_03/24
 

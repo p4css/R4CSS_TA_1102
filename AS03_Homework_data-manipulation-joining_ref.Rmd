@@ -1,0 +1,302 @@
+---
+title: "AS03_Homework_Data-Manipulation-Joining_ref"
+author: "曾子軒 Teaching Assistant"
+date: "2021/03/24"
+output:
+  html_document:
+    number_sections: no
+    theme: united
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'hold', comment = '#>', error = TRUE)
+```
+
+## 作業目的:   
+
+這份作業希望能夠讓你熟悉操作資料的流程，利用這兩週所學的 `filter()`, `mutate()`, `select()`, `group_by()`, `summarize()`, `join()`, `spread()`, `gather()` (或是 `pivot_wider()` 跟 `pivot_longer()` ) 等動詞完成任務。請一律印出 tibble，你可以利用 `as_tibble()` 將 dataframe 轉換成 tibble。
+
+## A. Data Manipulation
+
+資料介紹：這份資料來自[台北市捷運](https://www.metro.taipei/cp.aspx?n=FF31501BEBDD0136)，內容是 111 年 2 月台北捷運各站的出站統計。
+
+```{r message=FALSE, warning=FALSE}
+### 這邊不要動
+library(tidyverse)
+df_mrt <- read_csv("data/AS03/202202_mrt_出站.csv")
+
+### 給你看資料長這樣
+df_mrt %>% head(5)
+```
+### 1. `gather()` or `pivot_longer()`：
+
+請將 `df_mrt` 轉成長表格後印出，站名儲存到 `station`，出站人口儲存到 `n`，並將結果儲存到 `df_mrt_longer` 中，印出前 5 列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+df_mrt_longer <- df_mrt %>% pivot_longer(cols = -1, names_to = "station", values_to = "n")
+df_mrt_longer %>% head(5)
+
+### result
+#> # A tibble: 5 × 3
+#>   date       station      n
+#>   <date>     <chr>    <dbl>
+#> 1 2022-02-01 松山機場  1202
+#> 2 2022-02-01 中山國中  2640
+#> 3 2022-02-01 南京復興  5926
+#> 4 2022-02-01 忠孝復興 16323
+#> 5 2022-02-01 大安      3423
+```
+
+### 2. `group_by()` 和 `summarize()`：
+
+請利用 `df_mrt_longer` 計算台北捷運每日的總出站人數，並將結果由總出站人數大到小排列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+df_mrt_longer %>% group_by(date) %>%
+  summarise(n = sum(n)) %>% arrange(desc(n))
+  
+### result
+#> # A tibble: 28 × 2
+#>    date             n
+#>    <date>       <dbl>
+#>  1 2022-02-25 2108650
+#>  2 2022-02-18 1952448
+#>  3 2022-02-24 1952311
+#>  4 2022-02-23 1943921
+#>  5 2022-02-22 1928146
+#>  6 2022-02-11 1875738
+#>  7 2022-02-21 1867167
+#>  8 2022-02-17 1824938
+#>  9 2022-02-16 1819771
+#> 10 2022-02-14 1803972
+#> # … with 18 more rows
+```
+
+### 3. `group_by()` 和 `summarize()`：
+
+請利用 `df_mrt_longer` 計算每個捷運站出站人數的平均數與中位數，平均數存在 `avg`，中位數存在 `median`，把處理後的資料儲存在 `df_mrt_longer_agg` 後，印出前 3 列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+df_mrt_longer_agg <- df_mrt_longer %>% group_by(station) %>%
+  summarise(avg = mean(n), median = median(n))
+
+df_mrt_longer_agg %>% head(3)
+
+### result
+#> # A tibble: 3 × 3
+#>   station    avg median
+#>   <chr>    <dbl>  <dbl>
+#> 1 BL板橋  28518. 30178.
+#> 2 Y板橋    6413.  6495 
+#> 3 七張    11492. 12912.
+```
+
+### 4. `mutate()` 和 `arrange()`：
+
+請在 `df_mrt_longer_agg` 中新增 `diff` 欄位，以平均數減去中位數，再依照 `diff` 由大到小排列。印出前 3 列後，用一句話詮釋前三列的結果
+
+```{r message=FALSE,warning=FALSE}
+### your code
+df_mrt_longer_agg %>% mutate(diff = avg - median) %>%
+  arrange(desc(diff)) %>% head(3)
+
+### result
+#> # A tibble: 3 × 4
+#>   station    avg median  diff
+#>   <chr>    <dbl>  <dbl> <dbl>
+#> 1 動物園   4968.  3946. 1021 
+#> 2 淡水    24617. 23978   639.
+#> 3 輔大     7276.  6940   336.
+```
+
+## B. Data Manipulation and Joining
+
+資料介紹：這份資料改編自台大 105 學年度雙主修的榜單，請參考[雙主修榜單](https://reg227.aca.ntu.edu.tw/TMD/stuquery/doc/105%E9%9B%99%E4%B8%BB%E4%BF%AE%E6%A6%9C%E5%96%AE.pdf)，但是 105 年的掛了，給你看 [108年](http://reg227.aca.ntu.edu.tw/tmd/stuquery/doc/108%E9%9B%99%E4%B8%BB%E4%BF%AE%E6%A6%9C%E5%96%AE.pdf) 作為參考。
+
+```{r message=FALSE, warning=FALSE}
+### 這邊不要動
+df_college_join <- read_csv("data/AS03/df_college_join.csv")
+df_dmajor_105 <- read_csv("data/AS03/df_dmajor_105.csv")
+
+### 給你看資料長這樣
+df_dmajor_105 %>% head(5)
+df_college_join %>% head(5)
+```
+
+### 0. 尋找並處理 `NA`
+
+這題沒有要做，給你參考用！
+
+```{r message=FALSE, warning=FALSE}
+### 看是誰有 NA
+
+# 一個一個看
+df_dmajor_105 %>%
+    filter(is.na(ID_year)|is.na(ID_dept)|is.na(ID_order)|is.na(dept_original)|is.na(grade)|is.na(name)|is.na(dept_dmajor))
+
+# 進階
+# df_dmajor_105 %>% anti_join(df_dmajor_105 %>% drop_na())
+
+# 進階
+# df_dmajor_105 %>% filter(if_any(everything(), is.na))
+
+### 處理 NA
+# 全部踢掉
+df_dmajor_105 %>% drop_na() %>% head(5)
+
+# 按照預設值修改
+df_dmajor_105 %>% replace_na(list(ID_year = "missing", dept_original = "unknown", grade = 0)) %>% head(5)
+
+### 因為這題資料的缺失值會影響結果計算，因此全數踢掉
+df_dmajor_105 <- df_dmajor_105 %>% drop_na()
+```
+
+
+### 1. `group_by()` and `summarize()`:
+
+利用 `df_dmajor_105` 請幫我找出**向外**雙主修**人數最多**的系所   
+＊向外指的是該系有最多學生雙主修其他科系
+＊本題等於要找哪個系有最多學生雙主修其他科系
+
+```{r message=FALSE, warning=FALSE}
+### your code
+df_dmajor_105 %>% 
+  group_by(dept_original) %>%
+  summarise(n = n()) %>%
+  ungroup() %>%
+  filter(n == max(n))
+
+### result
+#> # A tibble: 1 × 2
+#>   dept_original     n
+#>   <chr>         <int>
+#> 1 森林環資系       27
+```
+
+### 2. `join()` and `count()` and `mutate()`:
+
+利用 `df_dmajor_105` 和 `df_college_join` 串接，請幫我計算各學院**向外**雙主修的人數以及佔比，看哪個學院**向外**雙主修的佔比最多，請由多到少排列    
+＊提醒：`df_dmajor_105` 和 `df_college_join` 兩個資料表中，都有科系的欄位，只是名字不一樣，可以在 join 的時候用 `by` 參數指名，也可以先更改欄位名稱之後再 join
+
+```{r message=FALSE, warning=FALSE}
+### your code
+df_dmajor_105 %>%
+  left_join(df_college_join, by = c("dept_original" = "dept")) %>%
+  count(college) %>%
+  mutate(per = n/sum(n)) %>%
+  arrange(desc(per))
+
+### your result should be
+#> # A tibble: 10 × 3
+#>    college      n     per
+#>    <chr>    <int>   <dbl>
+#>  1 文學院     105 0.211  
+#>  2 生農學院   102 0.205  
+#>  3 社科院      84 0.169  
+#>  4 理學院      54 0.108  
+#>  5 管理學院    50 0.100  
+#>  6 工學院      30 0.0602 
+#>  7 電資學院    30 0.0602 
+#>  8 法學院      22 0.0442 
+#>  9 醫學院      20 0.0402 
+#> 10 公衛學院     1 0.00201
+```
+
+### 3. `unite()` 和 `separte()`：
+
+A. 現在的學號分開了，請幫我用 `"-"` 拼起來，欄位命名為 `ID`，存成 `df_dmajor_105_tmp` 後印出前 3 列   
+B. 再幫我把 `df_dmajor_105_tmp` 分開成三個欄位分別叫做 "first", "second", "third"，分開以後<span style="color: white;">回到一個人生活</span>印出前 3 列   
+
+
+```{r message=FALSE, warning=FALSE}
+### your code (A)
+df_dmajor_105_tmp <- df_dmajor_105 %>% unite(col = "ID", c(ID_year, ID_dept, ID_order), sep = "-")
+df_dmajor_105_tmp %>% head(3)
+
+### result
+#> # A tibble: 3 × 5
+#>   ID          dept_original grade name  dept_dmajor
+#>   <chr>       <chr>         <dbl> <chr> <chr>      
+#> 1 B02-A01-314 法律系財法組      4 蔡O軒 哲學系     
+#> 2 B01-B01-076 法律系財法組      4 呂O禹 生科系     
+#> 3 B03-A01-361 法律系財法組      3 于O庭 哲學系     
+
+### your code (B)
+df_dmajor_105_tmp %>% separate(col = ID, into = c("first", "second", "third"), sep = "-") %>% 
+  head(3)
+
+### result
+#> # A tibble: 3 × 7
+#>   first second third dept_original grade name  dept_dmajor
+#>   <chr> <chr>  <chr> <chr>         <dbl> <chr> <chr>      
+#> 1 B02   A01    314   法律系財法組      4 蔡O軒 哲學系     
+#> 2 B01   B01    076   法律系財法組      4 呂O禹 生科系     
+#> 3 B03   A01    361   法律系財法組      3 于O庭 哲學系
+```
+
+
+### 4. `join()` and `mutate()`:
+
+請幫我串接 `df_dmajor_105` 和 `df_college_join`，接著計算各學院之間雙主修的人數，將結果儲存成 `df_dmajor_105_college` 並印出。
+
+```{r message=FALSE, warning=FALSE}
+### your code
+df_dmajor_105_college <- df_dmajor_105 %>%
+  left_join(df_college_join, by = c("dept_original" = "dept")) %>%
+  rename(college_original = college) %>%
+  left_join(df_college_join, by = c("dept_dmajor" = "dept")) %>%
+  rename(college_dmajor = college) %>%
+  count(college_original, college_dmajor)
+
+df_dmajor_105_college
+### your result should be
+#> # A tibble: 70 × 3
+#>    college_original college_dmajor     n
+#>    <chr>            <chr>          <int>
+#>  1 公衛學院         生科學院           1
+#>  2 工學院           工學院             6
+#>  3 工學院           文學院             3
+#>  4 工學院           理學院             7
+#>  5 工學院           生農學院           1
+#>  6 工學院           社科院             7
+#>  7 工學院           管理學院           3
+#>  8 工學院           電資學院           3
+#>  9 文學院           公衛學院           1
+#> 10 文學院           工學院             1
+#> # … with 60 more rows
+```
+
+### 5. `spread()` or `pivot_wider()`：
+
+請將 `df_dmajor_105_college` 轉成寬表格後印出，表格中的值使用 `n`，看各系所之間互相雙主修的情形
+
+```{r message=FALSE,warning=FALSE}
+### your code
+df_dmajor_105_college %>% 
+  pivot_wider(names_from = college_dmajor, values_from = n, values_fill = list(n = 0))
+
+### your result should be 
+#> # A tibble: 10 × 11
+#>    college_original 生科學院 工學院 文學院 理學院 生農學院 社科院 管理學院
+#>    <chr>               <int>  <int>  <int>  <int>    <int>  <int>    <int>
+#>  1 公衛學院                1      0      0      0        0      0        0
+#>  2 工學院                  0      6      3      7        1      7        3
+#>  3 文學院                  1      1     44      3        6     40        6
+#>  4 法學院                  1      0     10      0        1      7        3
+#>  5 理學院                  2      8      8     17        6      8        1
+#>  6 生農學院                5      9     11     13       39     19        3
+#>  7 社科院                  0      1     13      6        5     37        8
+#>  8 管理學院                4      0     13      7        1     10       10
+#>  9 醫學院                  0      0      3      3        4      3        2
+#> 10 電資學院                0      1      3     15        5      1        5
+#> # … with 3 more variables: 電資學院 <int>, 公衛學院 <int>, 法學院 <int>
+
+```
