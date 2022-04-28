@@ -1,0 +1,251 @@
+---
+title: "AS04_Visualizing-Date-Time_ref"
+author: "曾子軒 Teaching Assistant"
+date: "2022/04/14"
+output:
+  html_document:
+    number_sections: no
+    theme: united
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'hold', comment = '#>', error = TRUE)
+```
+
+## 作業目的: Data Visualization (01) Datetime
+
+這份作業希望能夠讓你熟悉於處理日期與時間資料，並且利用視覺化的文法(grammar of graphics) 呈現結果。過程中會用到前幾週學過 dplyr 的動詞，以及 lubridate 和 ggplot2。每個小題都請寫下你的原始碼並且畫出圖表。
+
+這次的作業使用 readr 提供的[原始資料](https://github.com/readr-media/readr-data/tree/master/movie_tickets)，主題是台灣的電影票房，有興趣的話可以點進 [【數讀國片票房】全球影視寒冬，2020 臺灣電影如何逆勢崛起](https://www.readr.tw/post/2522) 看一下這篇資料新聞。每一個小題都是新聞上的一張圖表！
+
+## 作業: Data Visualization (01) Datetime
+
+```{r message=FALSE, warning=FALSE}
+### 這邊不要動
+library(tidyverse)
+library(lubridate)
+library(ggthemes)
+
+df_movie_raw <- read_csv("data/AS04/movie_tickerts_2017_2020.csv")
+### 給你看資料長這樣
+df_movie_raw %>% glimpse()
+```
+
+### 1. `geom_line()`:
+
+請參考 readr 的圖表，畫出台灣 2017/10 ~ 2020/11 每週的放映數量，並且用不同顏色的曲線表示年份，其中 2020 年的曲線以實線表示，2017 - 2019 年的曲線則以虛線(dotted line)表示。
+
+可以參考 data -> AS04 -> plot_01.jpg，或者直接看 readr 報導當中標題為「臺灣電影每週放映數量」的圖表。因為週次計算方式可能有差異，因此不要求和 readr 計算出的數字完全相同，呈現類似趨勢即可。週次的計算方式可以挑選 **`start_date`** 作為基準。
+
+keywords：
+`geom_line()`, `week()`, `color = ?`, `linetype = ?`
+
+```{r message=FALSE, warning=FALSE}
+### your code
+df_movie_raw %>% 
+  mutate(year = year(`start_date`), week = week(`start_date`)) %>%
+  select(year, week, everything()) %>%
+  mutate(`中文片名` = str_remove_all(`中文片名`, " |　")) %>%
+  mutate(`中文片名` = str_replace_all(`中文片名`, " ！", "!")) %>%
+  group_by(year, week) %>%
+  summarise(`放映數量` = n_distinct(`中文片名`)) %>%
+  filter(year >= 2017) %>%
+  ungroup() %>%
+  mutate(year_flag = fct_relevel(if_else(year == 2020, "2020上映", "非2020上映"), "2020上映")) %>%
+  ungroup() %>%
+  mutate(yw = str_c(year, week, sep = "_"), year = as.factor(year)) %>%
+  ggplot(aes(x = week, y = `放映數量`, color = year, group = year, linetype = year_flag)) +
+  geom_line(size = 0.6) + 
+  scale_color_manual(values = c("#736886", "#BDAEAE", "#ECA9A5", "#A0522D")) +
+  scale_x_continuous(limits = c(1,52)) +
+  scale_y_continuous(limits = c(0,155), breaks = seq(0,140,20)) +
+  labs(title="臺灣電影每週放映數量",
+       subtitle = "資料來源：國家電影中心（2017-10-08~2020-11-15）",
+        x ="週", y = "電影放映數量（部）") +
+  theme_clean() +
+  scale_linetype(guide = "none") +
+  theme(legend.position="top", legend.title = element_blank()) +
+  theme(plot.title = element_text(family = "Noto Sans CJK TC Medium", face = "plain", size = 18),
+        # legend.title = element_text(family = "Noto Sans CJK TC Medium", face = "plain"), 
+        legend.text = element_text(family = "Noto Sans CJK TC Medium", face = "plain"), 
+        text = element_text(family = "Noto Sans CJK TC Medium"))
+### your result should be
+# 自己畫就好唷
+
+```
+
+
+```{r, echo=FALSE}
+knitr::include_graphics('data/AS04/plot_01.jpg')
+```
+
+### 2. `geom_bar()` or `geom_col()`:
+
+請參考 readr 的圖表，畫出台灣 2017 - 2020 每年所有電影票房與國片票房的長條圖，並以併排(dodge)方式呈現。
+
+可以參考 data -> AS04 -> plot_02.jpg，或者直接看 readr 報導當中標題為「臺灣的電影銷售票房變化」的圖表。本題要求和 readr 的數字相同。年份的計算方式可以挑選 **`start_date`** 作為基準。
+
+keywords：
+`geom_bar/col()`, `year()`, `fill = ?`
+
+```{r message=FALSE, warning=FALSE}
+### your code
+df_movie_raw %>% 
+  filter(`國別地區` == "中華民國") %>%
+  mutate(year = year(`start_date`)) %>%
+  mutate(`中文片名` = str_remove_all(`中文片名`, " |　")) %>%
+  mutate(`中文片名` = str_replace_all(`中文片名`, " ！", "!")) %>%
+  group_by(year) %>%
+  summarise(`銷售票數` = sum(`銷售票數`),
+            `銷售金額` = sum(`銷售金額`)) %>%
+  filter(year >= 2018) %>%
+  ungroup() %>%
+  mutate(country_flag = "國片銷售票房") %>%
+  bind_rows(
+    df_movie_raw %>% 
+      mutate(year = year(`start_date`)) %>%
+      mutate(`中文片名` = str_remove_all(`中文片名`, " |　")) %>%
+      mutate(`中文片名` = str_replace_all(`中文片名`, " ！", "!")) %>%
+      group_by(year) %>%
+      summarise(`銷售票數` = sum(`銷售票數`),
+                `銷售金額` = sum(`銷售金額`)) %>%
+      filter(year >= 2018) %>%
+      ungroup() %>%
+      mutate(country_flag = "全部電影銷售票房")
+  ) %>%
+  mutate(country_flag = fct_relevel(as.factor(country_flag), "國片銷售票房")) %>%
+  mutate(year = fct_reorder(as.factor(year), desc(year))) %>%
+  mutate(sales_label = str_c(round((`銷售金額`/100000000), 1), "億")) %>%
+  ggplot(aes(x = `year`, y = `銷售金額`, fill = country_flag)) +
+  geom_col(position = position_dodge(width = 0.6), width=0.5) +
+  geom_text(aes(label = sales_label), 
+            position = position_dodge(width = 0.6), hjust = -0.2,
+            family = "Noto Sans CJK TC Medium") +
+  coord_flip() +
+  scale_y_continuous(limits = c(0,8000000000), labels = scales::comma) +
+  # scale_y_continuous(limits = c(0,155), breaks = seq(0,140,20)) +
+  labs(title="臺灣的電影銷售票房變化",
+       subtitle = "相較之下，國片受到疫情的影響比較小",
+        x ="", y = "票房（新台幣/元）") +
+  theme_clean() +
+  theme(legend.position="top", legend.title = element_blank()) +
+  theme(plot.title = element_text(family = "Noto Sans CJK TC Medium", face = "plain", size = 18),
+        # legend.title = element_text(family = "Noto Sans CJK TC Medium", face = "plain"), 
+        legend.text = element_text(family = "Noto Sans CJK TC Medium", face = "plain"), 
+        text = element_text(family = "Noto Sans CJK TC Medium"))
+
+### your result should be
+# 自己畫就好唷
+
+```
+
+
+```{r, echo=FALSE}
+knitr::include_graphics('data/AS04/plot_02.jpg')
+```
+
+### 3. `geom_bar()` or `geom_col()`:
+
+請參考 readr 的圖表，畫出台灣 2017 - 2020 每年國片上映院數的中位數長條圖。
+
+可以參考 data -> AS04 -> plot_03.jpg，或者直接看 readr 報導當中標題為「國片上映院數是否有增加？」的圖表。本題要求和 readr 的數字相同。上映日期的計算方式可以直接使用 **`上映日期`** 欄位。
+
+keywords：
+`geom_bar/col()`, `year()`, `fill = ?`
+
+```{r message=FALSE, warning=FALSE}
+### your code
+df_movie_raw %>% 
+  filter(`國別地區` == "中華民國") %>%
+  mutate(year = year(`上映日期`)) %>%
+  group_by(year, `中文片名`) %>%
+  summarise(`上映院數` = max(`上映院數`)) %>% 
+  ungroup() %>%
+  group_by(year) %>%
+  summarise(`上映院數` = median(`上映院數`, na.rm = T)) %>%
+  filter(year >= 2017) %>%
+  mutate(year = fct_reorder(as.factor(year), desc(year))) %>%
+  mutate(rank = row_number()) %>%
+  ggplot(aes(x = `year`, y = `上映院數`, fill = "國片上映院數中位數")) +
+  geom_col(width=0.5) +
+  geom_text(aes(label = `上映院數`), 
+            hjust = -0.2,
+            family = "Noto Sans CJK TC Medium") +
+  coord_flip() +
+  scale_y_continuous(limits = c(0,22), breaks = seq(0,22,2)) +
+  labs(title="國片上映院數是否有增加？",
+       subtitle = "歷年國片上映院數中位數\n2018-06-13文化部發布國產電影片國內映演獎勵要點",
+        x ="", y = "上映院數（家）") +
+  theme_clean() +
+  theme(legend.position="top", legend.title = element_blank()) +
+  theme(plot.title = element_text(family = "Noto Sans CJK TC Medium", face = "plain", size = 18), 
+        # legend.title = element_text(family = "Noto Sans CJK TC Medium", face = "plain"), 
+        legend.text = element_text(family = "Noto Sans CJK TC Medium", face = "plain"), 
+        text = element_text(family = "Noto Sans CJK TC Medium"))
+
+
+### your result should be
+# 自己畫就好唷
+
+```
+
+
+```{r, echo=FALSE}
+knitr::include_graphics('data/AS04/plot_03.jpg')
+```
+
+### 4. `geom_bar()` or `geom_col()`:
+
+請參考 readr 的圖表，畫出台灣 2017 - 2020 國片累計銷售金額的長條圖，篩選出銷售金額前 23 高的國片後由大到小排列。（圖表中有部片叫做《可不可以，你也剛好喜歡我》，它是 2020 年上映的，readr 應該漏標了。）
+
+可以參考 data -> AS04 -> plot_04.jpg，或者直接看 readr 報導當中標題為「2017 ~ 2020 熱賣國片前 20 名」的圖表。本題要求和 readr 的數字相同。上映日期的計算方式可以直接使用 **`上映日期`** 欄位。
+
+keywords：
+`geom_bar/col()`, `year()`, `fill = ?`
+
+```{r message=F, warning=F}
+### your code
+df_movie_raw %>% 
+  filter(`國別地區` == "中華民國") %>%
+  mutate(`中文片名` = str_remove_all(`中文片名`, " |　")) %>%
+  mutate(`中文片名` = str_replace_all(`中文片名`, " ！", "!")) %>%
+  mutate(year_flag = fct_relevel(if_else(year(`上映日期`) == 2020, "2020上映", "非2020上映"), "非2020上映")) %>%
+  filter(!is.na(`上映日期`)) %>%
+  group_by(`中文片名`, year_flag) %>%
+  summarise(`累計銷售票數` = max(`累計銷售票數`),
+            `累計銷售金額` = max(`累計銷售金額`)) %>%
+  arrange(desc(`累計銷售金額`)) %>%
+  ungroup() %>%
+  slice(1:23) %>%
+  mutate(rank = row_number()) %>%
+  mutate(`中文片名` = fct_reorder(as.factor(`中文片名`), desc(rank))) %>%
+  ggplot(aes(x = `中文片名`, y = `累計銷售金額`, fill = year_flag)) +
+  geom_col() +
+  geom_text(aes(label = scales::comma(`累計銷售金額`)), 
+            position = position_dodge(width = 0.6), hjust = -0.2,
+            family = "Noto Sans CJK TC Medium") +
+  coord_flip() +
+  scale_y_continuous(limits = c(0,300000000), labels = scales::comma) +
+  labs(title="2017 ~ 2020 熱賣國片前 20 名",
+       subtitle = "2020年有多部片上榜，還有 3 部片緊追在後。銷售票數最高的返校，相當於美 20 個臺灣人就有一個人看過。\n資料來源：國家電影中心（2017~2020-11-15）",
+        x ="", y = "票房銷售金額（新台幣／元）") +
+  theme_clean() +
+  theme(legend.position="bottom", legend.title = element_blank()) +
+  theme(plot.title = element_text(family = "Noto Sans CJK TC Medium", face = "plain", size = 18), 
+        # legend.title = element_text(family = "Noto Sans CJK TC Medium", face = "plain"), 
+        legend.text = element_text(family = "Noto Sans CJK TC Medium", face = "plain"), 
+        text = element_text(family = "Noto Sans CJK TC Medium"))
+
+### your result should be
+# 自己畫就好唷
+
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics('data/AS04/plot_04.jpg')
+```

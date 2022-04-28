@@ -1,5 +1,11 @@
 # R4CSS_TA
 
+### week11_04/28
+
+* AS 05 Homework Web Scraping JSON [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS05_Homework_Web-Scraping-JSON.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS05_Homework_Web-Scraping-JSON.html) 
+* AS 04 Reference Visualizing Date & Time [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS04_Homework_Visualizing-Date-Time_ref.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS04_Homework_Visualizing-Date-Time_ref.html) 
+
+
 
 ### week09_04/14
 
