@@ -1,0 +1,616 @@
+---
+title: "Lab05_Spatial-Data"
+subtitle: "Spatial Data Manipulation and Visualization"
+author: "曾子軒 Dennis Tseng"
+institute: "台大新聞所 NTU Journalism"
+date: "2022/05/05"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      self_contained: true
+---
+```{r setup, cache = F, echo=F}
+knitr::opts_chunk$set(error = TRUE)
+```
+
+<style type="text/css">
+
+.remark-slide-content {
+    padding: 1em 1em 1em 1em;
+    font-size: 28px;
+}
+
+.my-one-page-font {
+  padding: 1em 1em 1em 1em;
+  font-size: 20px;
+  /*xaringan::inf_mr()*/
+}
+
+</style>
+
+# 今日重點: Use R as GIS
+
+- 認識地理資訊格式
+- 認識地理資料結構 in R
+- 操作地理資料
+- 視覺化地理資料
+- Extra: Geometry Operations
+
+---
+# 今日目標
+
+```{r image_map01, out.width='45%', out.height='45%',echo=FALSE}
+knitr::include_graphics("photo/端_map_choropleth.png")
+knitr::include_graphics("photo/viewsoftheworld_cartogram.png")
+```
+
+.pull-left[Taiwan 2020 Presidential Choropleth by [端傳媒](https://theinitium.com/article/20200112-taiwan-election-data-ntu/)]
+
+.pull-right[US 2016 Presidential Vote Share Map by [Views of the World](http://www.viewsoftheworld.net/wp-content/uploads/2016/11/USelection2016Cartogram.png)]
+
+---
+
+# 地理資訊格式
+
+```{r image_geo_example, out.width="40%", out.height="40%", echo=FALSE}
+knitr::include_graphics("photo/Lab05_spatial_data.jpeg")
+knitr::include_graphics("photo/Lab05_spatial_data_02.jpeg")
+```
+
+.pull-left[[Geographic Information Systems and Science](https://andrewmaclachlan.github.io/CASA0005repo/index.html)]
+
+.pull-right[[Intro to GIS and Spatial Analysis
+](https://mgimond.github.io/Spatial/chp02-0.html)]
+
+---
+
+# 地理資訊格式
+- Vector vs. Raster, 向量 vs. 網格
+- The vector data model represents the world using points, lines and polygons.(點、線、多邊形)
+- The raster data model divides the surface up into cells of constant size.(切成固定大小的格子)
+- 來看一下[範例](https://dennistseng.shinyapps.io/taipeiapp/)
+
+---
+
+# Data: Taipei City Demography
+
+- 台北市民政局：[台北市各里人口數](https://data.taipei/#/dataset/detail?id=a6394e3f-3514-4542-87bd-de4310a40db3)和[台北市里界圖](https://data.taipei/#/dataset/detail?id=6b17b31d-4e16-495e-95b1-9fd1f47c80d8)，前者的資料格式為 `csv` ，後者為 `shapefile`
+- 內政部：[台北市人口統計_村里](https://segis.moi.gov.tw/STAT/Web/Platform/QueryInterface/STAT_QueryProductView.aspx?pid=E8C9BC9FA3B8955DB5ED36ECB95CC2B2&spid=2379CCC54C5DD0F4FEC8CE65233993C4)與和[台北市人口統計_最小統計區](https://segis.moi.gov.tw/STAT/Web/Platform/QueryInterface/STAT_QueryProductView.aspx?pid=D71B7495F95BC7C4E9AA7D13F5148AD1&spid=7ED8D58E129BC680)，資料格式則是 `csv` 和 `shapefile` 都有
+
+---
+
+class: inverse, center, middle
+
+# 請大家去看/下載一下資料，[內政部](https://segis.moi.gov.tw/STAT/Web/Platform/QueryInterface/STAT_QueryInterface.aspx?Type=1)可以抓你喜歡的縣市，不用侷限在台北
+
+---
+
+# File Format Introduction
+
+- `xlsx`/`ods`： 可以用 Excel/Google sheet 開啟的檔案格式，長相就是平常可以看到的試算表表格。政府單位常常以 `ods` 發布資料，台北市民政局的人口統計即是提供 `ods `
+- `csv`： comma separated value, 用逗點分隔欄位，是非常常見的檔案格式。無論政府或私人單位都會以 `csv` 發布資料
+- `tif`：儲存地理圖像的點陣圖格式，通常資料當中包含經緯度。衛星影像的原始格式即是 `tif`。
+- `shapefile`：儲存地理圖資的檔案格式，由 `shp`, `shx`, `dbf`, `prj` 所組成，分別紀錄了地理參照資料、索引、屬性、投影。通常提供地理圖資時，會提供包含 `shp`, `shx`, `dbf`, `prj`, 等格式的壓縮檔案。
+- `geojson`：基於 JSON 儲存地理資訊的檔案格式，內容包含空間範圍和屬性。
+
+---
+
+# File Format Introduction: Shapefile
+
+- 最常見的地理資訊格式，由 ERSI 發明，當中包含數個檔案
+    - `.shp`: 儲存幾何特徵
+    - `.shx`: 儲存 `.shp` 當中特徵的 index
+    - `.dbf`: 儲存屬性資訊，像是幾何特徵的名字或變數
+    - `.prj`: 儲存座標系統資訊 (coordinate system information) 
+- 這個格式常見到有人創了 [twitter account](https://twitter.com/shapefiIe)
+
+---
+
+# File Format Introduction: GeoJSON
+
+- 使用跟 JSON 類似的原始格式，但設計上有特別考慮在表現出地理特徵以外，也保留 non-spatial 的屬性
+- 地理特徵包含 points, line strings, polygons, and multi-part collections of these types.
+- [Processing of GeoJSON data in R](https://cran.r-project.org/web/packages/geojsonR/vignettes/the_geojsonR_package.html)
+
+```{r image_geojson, out.width='55%', out.height='55%',echo=FALSE}
+knitr::include_graphics("photo/R_example_geojson.png")
+```
+
+---
+
+# Data Structure: Simple Feature
+
+- sf, simple feature
+    - 可以想像成幾何圖形加上 data frame 的組合
+    - data frame 的內容就是區域的屬性(attribute)，像是人口
+    - 幾何圖形有很多種 e.g. point, line string, polygon
+    - 不是簡介的介紹: [Simple Features for R](http://r-spatial.github.io/sf/articles/sf1.html); photo [source](https://geocompr.robinlovelace.net/spatial-class.html#intro-sf)
+
+```{r, out.width='30%', out.height='30%',echo=FALSE}
+knitr::include_graphics("photo/Lab05_sf_structure.png")
+```
+
+---
+
+# Data Structure: Simple Feature
+
+- 讀取原始資料
+    - 區分一下: file format & data sturcture
+    - import shapefile/GeoJSON 到 R 裏面變成 sf
+    - `st_read()`, `dsn`(data source name) and `layer`(layer name)
+    - 雖然 `shp` 設計得很好，但還是盡量完整把其他檔案也讀進來
+
+```{r, message=F,warning=F}
+library(tidyverse)
+library(sf)
+library(cartogram)
+library(maps)
+```
+
+---
+
+# Data Importing
+
+```{r, message=F,warning=F}
+sf_tpe <-
+  st_read(dsn = "data/Lab05/109年12月行政區人口統計_村里_臺北市_SHP/", layer = "109年12月行政區人口統計_村里", quiet = T) %>%
+  mutate(across(where(is.character), ~iconv(., from = "BIG5", to = "UTF8"))) %>%
+  rename_with(~str_to_lower(.), everything()) %>% 
+  mutate(across(where(is.double), ~if_else(is.na(.),as.double(0),.))) %>%
+  st_set_crs(3826) %>% st_transform(4326) %>% filter(str_detect(county, "臺北市")) %>%
+  mutate(village = if_else(str_detect(village,"糖"),"糖廍里",village))
+```
+
+---
+
+# Data Importing
+
+```{r, message=F,warning=F}
+sf_tpe
+```
+
+---
+
+# Simple Feature 的組成
+
+- 資料結構 - Simple feature collection
+- 幾何組成 - geometry type
+- 維度 - dimension
+- 地理區域 - bbox
+- 大地座標系統 - geographic CRS
+
+---
+
+# 馬上來畫一張圖
+
+```{r, message=F,warning=F}
+sf_tpe %>% ggplot() + geom_sf()
+```
+
+---
+
+# 上個顏色
+
+```{r, message=F,warning=F}
+sf_tpe %>% ggplot(aes(fill = p_cnt)) + geom_sf(color = NA) +
+  scale_fill_gradient(low = "white", high = "purple")
+# 260 萬
+```
+
+---
+
+# 上個顏色
+
+```{r, message=F,warning=F}
+sf_tpe %>% mutate(p_density = p_cnt/(as.double(st_area(.))/1000000)) %>%
+  ggplot(aes(fill = p_density)) + geom_sf(color = NA) + scale_fill_gradient(low = "white", high = "purple")
+# 272 平方公里
+```
+
+---
+
+# 重要概念: 投影
+
+- 投影系統 = 告訴你怎麼在地圖上呈現資料的數學公式
+- 大地座標系統(geographic coordiate reference systems) 
+    - 視資料為球體，舉例: a minute type of resolution，代表把地球切成 360 度，每度有 60 分，每分有 60 秒
+    - 經緯: Arc-seconds of latitude (緯線) 幾乎保持固定，但 arc-seconds of longitude (經線) 越往極點會越小
+- 投影座標系統(projected coordinate reference systems)
+    - 視資料為二維平面，所以長寬、角度、面積都是固定的
+
+---
+
+# 重要概念: 投影
+
+```{r , out.width="40%", out.height="40%", echo=FALSE}
+knitr::include_graphics("photo/Lab05_CRS.png")
+knitr::include_graphics("photo/Lab05_CRS_02.png")
+```
+
+.pull-left[geographic CRS, (0,0)是零度經線跟零度緯線的交叉]
+
+.pull-right[projected CRS, (0,0)是地圖上左下角]
+
+---
+
+# 重要概念: 投影
+
+- 考慮到上述兩種投影系統的差別，分析或視覺化的時候，因為尺度(scale)通常都是以國家、地區為單位，需要從立體投影到平面
+- 大部分國家/地區有自己的投影座標系統，也就是把中心(0,0)從地球中心移到國家/地區的中心
+- 區分: 以角度為單位(angular)，譬如 degrees, latitude and longitude，或者資料是全球尺度，則使用 GCRS，以線性為單位；譬如英尺、公尺，或者資料是地方尺度，則使用 PCRS
+
+---
+
+# 重要概念: 投影
+
+- 從立體到平面
+- 地球是立體的橢圓形，用參考橢球體(Ellipsoid)代表它
+- 會有一個跟參考橢球體相符的大地基準面，用來作為 CRS 的依據
+
+```{r , out.width="40%", out.height="40%", echo=FALSE}
+knitr::include_graphics("photo/Lab05_CRS_03.jpg")
+```
+
+---
+
+# 重要概念: 投影
+
+- 每個區域都有適合的參考橢球體和大地基準面
+- 基準點(Datum)分為區域性的的(local)和全球的(global)，用來讓人從地球表面對應到笛卡兒座標系（就常見的 XY 啦XD）
+- global 最常用: WGS84，以地球質心為中心
+- local 最常用 TWD97，舊版是用 TWD67
+- 如果你是地理狂可以看[
+大地座標系統漫談](https://www.sunriver.com.tw/grid_tm2.htm)跟[座標系統介紹](http://140.121.160.124/GEO/%E5%BA%A7%E6%A8%99%E7%B3%BB%E7%B5%B1.pdf)
+
+---
+
+# 重要概念: 投影
+
+- proj4string
+    - 可以用來快速看 CRS 屬於哪種
+    - a compact way of identifying a coordinate reference system
+    - 組成包含 projection, datum, units, ellps, etc.，用 + 號分隔
+
+```{r, message=F,warning=F}
+st_crs(sf_tpe)$proj4string
+```
+
+---
+
+# 重要概念: 投影
+
+- EPSG
+    - 投影法有對應的代號稱為 EPSG(歐洲石油探勘組織)，他們制定了空間參考識別系統(SRID)
+    - 可以記兩個重要的: WGS84 = 4326, TWD97 = 3826
+
+```{r, message=F,warning=F}
+st_crs(sf_tpe)
+```
+
+---
+
+# 重要概念: 投影
+
+- 用得到投影的情境
+    - 研究區域，想轉換座標(changing projections)
+    - 原始資料就缺投影方法
+- 解方
+    - 修改 EPSG code 或是改掉 `proj4string` 的內容
+    - 加上 EPSG code 或是加上 `proj4string` 的內容
+- function
+    - `st_crs()` 取用
+    - `st_transform()` 變換
+    - `st_set_crs()` 設定
+
+---
+
+# 變換投影看看
+
+```{r, message=F,warning=F}
+# sf_tpe %>% st_crs_set(4326)
+sf_tpe %>% st_transform(3826) %>% st_crs()
+```
+
+---
+
+class: inverse, center, middle
+
+# 投影講完惹！！再來下載一下整個台灣的[地理圖資](https://data.gov.tw/dataset/7442)
+
+---
+
+# 操作 sf
+
+- 可以用 `st_()` 開頭
+    - 引入圖資 `st_read()`, `st_as_sf()`
+    - 座標系統 `st_crs()`, `st_set_crs()`, `st_transform()`
+    - 處理圖資 `st_crop()`, `st_bbox()`, `st_simplify()`
+- 或者也可以用 `dplyr` 的動詞，`rename()`、`filter()`、`mutate()`、`select()`、`group_by()` 配 `summarize()`
+
+---
+
+# 操作 sf
+
+```{r, message=F,warning=F}
+sf_taiwan <-
+  st_read(dsn = "data/Lab05/直轄市縣市界線/", layer = "COUNTY_MOI_1090820", quiet = T) %>%
+  rename_with(~str_to_lower(.), everything()) %>% st_transform(3826)
+
+sf_taiwan
+```
+
+---
+
+# 操作 sf
+
+```{r, message=F,warning=F}
+sf_taiwan_simplify <- sf_taiwan %>% st_transform(3826) %>% 
+  st_simplify(dTolerance = 100) %>% st_transform(4326)
+sf_taiwan_simplify %>% object.size()
+sf_taiwan %>% object.size()
+```
+---
+
+# 操作 sf
+
+```{r, message=F,warning=F}
+sf_taiwan_simplify %>% st_bbox()
+```
+
+---
+
+# 畫圖 - 4326
+
+```{r, message=F,warning=F}
+sf_taiwan_simplify %>% ggplot() + geom_sf()
+```
+
+---
+
+# 畫圖 - 3826
+
+```{r, message=F,warning=F}
+sf_taiwan_simplify %>% st_transform(3826) %>% ggplot() + geom_sf()
+```
+
+---
+
+# 畫圖 - 切台灣本島
+
+- `filter()`
+
+```{r, message=F,warning=F}
+sf_taiwan_simplify %>% 
+  filter(! str_detect(countyname, "連江|金門|澎湖")) %>%
+  ggplot() + geom_sf()
+```
+
+---
+
+# 畫圖 - 切台灣本島
+
+- `st_crop()`
+
+```{r, message=F,warning=F}
+sf_taiwan_simplify %>% 
+  st_crop(xmin = 120, xmax = 122, ymin = 22, ymax = 25.5) %>%
+  ggplot() + geom_sf()
+```
+
+---
+
+class: inverse, center, middle
+
+# 再次回到面量圖！來畫 2020 總統大選得票
+
+---
+
+# Map: Choropleth
+
+<ul>
+<li>Definition
+    <ul>
+    <li>A choropleth map displays divided geographical areas or regions that are coloured in relation to a numeric variable.</li>
+    <li><a href="https://www.r-graph-gallery.com/choropleth-map.html">Choropleth Map by the R Graph Gallery</a></li>
+    </ul>
+<li>Process
+    <ul>
+    <li>Get Taiwan 2020 Election Results Data</li>
+    <li>Decide the variable plotted, such as KMT vote per</li>
+    <li>Join Election with Taiwan sf object</li>
+    <li>Draw the map colored by the variable</li>
+    </ul>
+</ul>
+
+---
+
+class: inverse, center, middle
+
+# R time: Choropleth
+
+---
+
+# Map: Dot Distribution Map/Bubble Map
+
+<ul>
+<li>Definition
+    <ul>
+    <li>Choropleths aggregate individual data points into a single geographic region. In contrast, a dot distribution/density map uses a dot symbol to show the presence of a feature or a phenomenon.</li>
+    <li><a href="https://www.r-graph-gallery.com/bubble-map.html">Bubble map by the R Graph Gallery</a></li>
+    </ul>
+<li>Process
+    <ul>
+    <li>Get Taiwan Cities Population Data</li>
+    <li>Decide the variable plotted, such as city population</li>
+    <li>Plot the base map and add city dots</li>
+    </ul>
+</ul>
+
+---
+
+class: inverse, center, middle
+
+# R time: Dot Distribution Map
+
+---
+
+# Map: Cartogram
+
+<ul>
+<li>Definition
+    <ul>
+    <li>A cartogram is a map in which the geometry of regions is distorted in order to convey the information of an alternate variable.</li>
+    <li><a href="https://www.r-graph-gallery.com/cartogram.html">Cartogram by the R Graph Gallery</a></li>
+    </ul>
+<li>Process
+    <ul>
+    <li>Get Taiwan 2020 Election Results Data and population data</li>
+    <li>Decide the variable for distortion, such as population</li>
+    <li>Also decide the variable cared about, such as KMT vote per</li>
+    <li>Distort the sf object based on the variable</li>
+    <li>Plot the distorted map and colored by chosen variable</li>
+    </ul>
+</ul>
+
+---
+
+class: inverse, center, middle
+
+# R time: Cartogram
+
+---
+
+# Map: Parliament Plots
+
+<ul>
+<li>Definition
+    <ul>
+    <li>A visual representations of the composition of legislatures that display seats colour-coded by party.</li>
+    <li><a href="https://github.com/RobWHickman/ggparliament">ggparliament by RobWHickman</a></li>
+    <li><a href="https://erocoar.github.io/ggpol/">ggpol by Frederik Tiedemann</a></li>
+    </ul>
+<li>Process
+    <ul>
+    <li>Get Taiwan 2020 Parliament Raw Data</li>
+    <li>Create x, y, and theta columns</li>
+    <li>Plot Parliament Composition</li>
+    </ul>
+</ul>
+
+---
+
+class: inverse, center, middle
+
+# R time: Parliament Plots
+
+---
+# Map: Hexmap
+
+<ul>
+<li>Definition
+    <ul>
+    <li>A a geospatial object where all regions of the map are represented as hexagons.</li>
+    <li><a href="https://pitchinteractiveinc.github.io/tilegrams/">tilegramps showcase with JS</a></li>
+    <li><a href="https://github.com/olihawkins/clhex">library(clhex)</a></li>
+    <li><a href="https://olihawkins.com/project/hexjson-editor/">Hexmap Editor</a></li>
+    </ul>
+<li>Process
+    <ul>
+    <li>Create empty Taiwan Constituency hexjson with library(clhex)</li>
+    <li>Draw Taiwan Constituency with hexjson editor according to geographical posistion</li>
+    <li>Import edited hexjson into R and plot with geom_sf()</li>
+    <li>Export the .SVG for further use</li>
+    </ul>
+</ul>
+
+---
+
+class: inverse, center, middle
+
+# R time: Hexmap
+
+---
+
+# Map: Summary
+
+<ul>
+<li>Plots
+    <ul>
+    <li>背景地圖/Background Map</li>
+    <li>統計地圖/Choropleth</li>
+    <li>點示地圖/Dot Distribution Map; Bubble Map</li>
+    <li>示意地圖/Cartogram</li>
+    <li>國會席次圖/Parliament Plots</li>
+    <li>六邊型網格圖/Hexmap/Tilegram</li>
+    </ul>
+
+---
+
+# Some Map
+
+```{r image_map001, out.width='45%', out.height='45%',echo=FALSE}
+knitr::include_graphics("photo/端_map_cartogram.png")
+knitr::include_graphics("photo/viewsoftheworld_cartogram.png")
+```
+
+.pull-left[Taiwan 2020 Presidential Choropleth by [端傳媒](https://theinitium.com/article/20200112-taiwan-election-data-ntu/)]
+
+.pull-right[US 2016 Presidential Vote Share Map by [Views of the World](http://www.viewsoftheworld.net/wp-content/uploads/2016/11/USelection2016Cartogram.png)]
+---
+# Some Map
+
+```{r image_map002, out.width='45%', out.height='45%',echo=FALSE}
+knitr::include_graphics("photo/NYT_map_bubble.png")
+knitr::include_graphics("photo/端_map_hexbin.png")
+```
+
+.pull-left[US 2012 Presidential Vote Lead Map by [The New York Times](https://www.nytimes.com/interactive/2016/11/01/upshot/many-ways-to-map-election-results.html)]
+
+.pull-right[Taiwan 2020 Parliament Hexmap by [端傳媒](https://theinitium.com/article/20200112-taiwan-election-data-ntu-1/)]
+
+---
+# Some Map
+
+```{r image_map003, out.width='50%', out.height='50%',echo=FALSE}
+knitr::include_graphics("photo/reddit_map_hex_swing.png")
+knitr::include_graphics("photo/關鍵_plot_parliament.png")
+```
+.pull-left[UK 2019 Parliament Swing Map by [TeHuia](https://www.reddit.com/r/MapPorn/comments/eah5j1/uk_2019_election_swing_map/)]
+
+.pull-right[Taiwan 2020 Parliament Plot by [關鍵評論網](https://www.thenewslens.com/article/129934)]
+
+---
+
+# 今日重點: Use R as GIS
+
+- 認識地理資訊格式
+- 認識地理資料結構 in R
+- 操作地理資料
+- 視覺化地理資料
+- Extra: Geometry Operations
+
+
+---
+
+# 之後有機會: 空間分析
+
+- [Geometry Operations](https://geocompr.robinlovelace.net/geometric-operations.html#buffers)
+    - [可達性空間](https://medium.com/ivc-invisiblecities/passive-space-remake-4faea442d78a)
+    - [重疊區域切分](https://medium.com/geopainter/%E7%94%A8%E6%8D%B7%E9%81%8B%E8%B3%87%E6%96%99%E8%A7%80%E5%AF%9F%E4%B9%98%E5%AE%A2%E7%9A%84%E7%A7%BB%E5%8B%95%E8%BB%8C%E8%B7%A1-%E4%B8%8B-22d70ea76ddb)
+    - [空間層級變換](https://medium.com/ivc-invisiblecities/%E5%8F%B0%E5%8C%97%E4%BA%BA%E5%8F%A3%E5%88%86%E5%B8%83%E5%9C%B0%E5%9C%96%E7%A9%BA%E9%96%93%E8%B3%87%E6%96%99%E7%9A%84%E5%B0%BA%E5%BA%A6%E8%AE%8A%E6%8F%9B-7278e319c5fe)
+- Spatial Analysis
+    - 熱點分析
+    - 空間自相關
+    - 熱區分析
+
+---
+
+class: inverse, center, middle
+
+# Thanks 
+

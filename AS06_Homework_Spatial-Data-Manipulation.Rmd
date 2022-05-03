@@ -1,0 +1,140 @@
+---
+title: "AS06_Homework_Spatial-Data-Manipulation"
+author: "你是誰 R10342000 新聞所碩五"
+date: "2022/04/28"
+output:
+  html_document:
+    number_sections: no
+    theme: united
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'hold', comment = '#>', error = TRUE)
+```
+
+## 作業目的:   
+
+這份作業利用[](https://db.cec.gov.tw/ElecTable/Election?type=Mayor) 2018 年台北市市長選舉的得票資料，以及內政部的[台北市村里人口統計](https://segis.moi.gov.tw/STAT/Web/Platform/QueryInterface/STAT_QueryProductView.aspx?pid=E8C9BC9FA3B8955DB5ED36ECB95CC2B2&spid=2379CCC54C5DD0F4FEC8CE65233993C4)，希望能夠讓你熟悉操作空間資料的流程。
+
+其中，台北市村里人口統計裡面的 `h_cnt` 代表「戶數」， `p_cnt` 代表「人數」， `m_cnt` 代表「男性人數」， `f_cnt` 代表「女性人數」。
+
+```{r message=FALSE, warning=FALSE}
+### 這邊不要動
+library(tidyverse)
+library(sf)
+
+df_mayor_tpe <- read_csv("data/AS06/df_mayor_tpe.csv")
+sf_tpe <-
+  st_read(dsn = "data/AS06/109年12月行政區人口統計_村里_臺北市_SHP/", layer = "109年12月行政區人口統計_村里", quiet = T) %>%
+  mutate(across(where(is.character), ~iconv(., from = "BIG5", to = "UTF8"))) %>%
+  rename_with(~str_to_lower(.), everything()) %>% 
+  mutate(across(where(is.double), ~if_else(is.na(.),as.double(0),.))) %>%
+  st_set_crs(3826) %>% st_transform(4326) %>% filter(str_detect(county, "臺北市")) %>%
+  mutate(village = if_else(str_detect(village,"糖"),"糖廍里",village)) %>%
+  select(-matches("_id"), -info_time)
+
+### 給你看資料長這樣
+df_mayor_tpe %>% head(5)
+sf_tpe %>% head(5)
+```
+
+### 1. spatial data manipulation：
+
+請利用 `sf_tpe` ，計算代表每個村里女性佔比的欄位 `f_per`，以及代表台北市人數排行的 `p_ranking`（人最多的村里排名 = 1），接著按照 `f_per`，由大到小排列，最後將這個 `sf` 型態的資料轉成 `tibble`，選擇 `county`, `town`, `village`, `f_per`, `p_ranking` , `p_cnt` 共 6 個欄位, 並印出前 5 列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 5 × 6
+#>   county town   village f_per p_ranking p_cnt
+#>   <chr>  <chr>  <chr>   <dbl>     <int> <dbl>
+#> 1 臺北市 中山區 康樂里  0.582       437  2610
+#> 2 臺北市 中山區 中山里  0.574       132  6752
+#> 3 臺北市 中山區 晴光里  0.570       230  5506
+#> 4 臺北市 松山區 富泰里  0.569       313  4652
+#> 5 臺北市 中山區 正義里  0.568       254  5251
+```
+
+### 2. data pivoting：
+
+請將 `df_mayor_tpe` 轉成寬表格後印出，推上成為寬表格的欄位包含 3 位候選人，數值則是得票率，並將結果儲存到 `df_mayor_tpe` 中，印出前 5 列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> # A tibble: 5 × 5
+#>   county town   柯文哲 丁守中 姚文智
+#>   <chr>  <chr>   <dbl>  <dbl>  <dbl>
+#> 1 臺北市 松山區  0.396  0.434  0.162
+#> 2 臺北市 信義區  0.389  0.44   0.162
+#> 3 臺北市 大安區  0.385  0.457  0.150
+#> 4 臺北市 中山區  0.415  0.384  0.193
+#> 5 臺北市 中正區  0.416  0.418  0.156
+```
+
+### 3. aggregating spatial data：
+
+請利用 `sf_tpe` ，以縣市和鄉鎮市區為單位，計算彙總後的戶數、人數、男性人數、女性人數，將資料儲存在 `sf_tpe_agg`，並且印出前 5 列。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+  
+### result
+#> Simple feature collection with 5 features and 6 fields
+#> Geometry type: POLYGON
+#> Dimension:     XY
+#> Bounding box:  xmin: 121.4588 ymin: 25.00813 xmax: 121.6286 ymax: 25.21018
+#> Geodetic CRS:  WGS 84
+#> # A tibble: 5 × 7
+#>   county town    h_cnt  p_cnt  f_cnt  m_cnt                             geometry
+#>   <chr>  <chr>   <dbl>  <dbl>  <dbl>  <dbl>                        <POLYGON [°]>
+#> 1 臺北市 中山區 100790 223876 120156 103720 ((121.549 25.09124, 121.5489 25.091…
+#> 2 臺北市 中正區  65795 155397  81445  73952 ((121.512 25.04986, 121.5118 25.049…
+#> 3 臺北市 信義區  88952 215240 113069 102171 ((121.58 25.04946, 121.58 25.04946,…
+#> 4 臺北市 內湖區 109891 282525 147901 134624 ((121.5952 25.11452, 121.5951 25.11…
+#> 5 臺北市 北投區  98131 250144 130088 120056 ((121.5761 25.19542, 121.576 25.195…
+```
+
+### 4. joining data：
+
+請串起 `sf_tpe_agg` 和 `df_mayor_tpe_wider`，把資料儲存在 `sf_tpe_join` 後，印出前 5 列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### result
+#> Simple feature collection with 5 features and 9 fields
+#> Geometry type: POLYGON
+#> Dimension:     XY
+#> Bounding box:  xmin: 121.4588 ymin: 25.00813 xmax: 121.6286 ymax: 25.21018
+#> Geodetic CRS:  WGS 84
+#> # A tibble: 5 × 10
+#>   county town    h_cnt  p_cnt  f_cnt  m_cnt                      geometry 柯文哲
+#>   <chr>  <chr>   <dbl>  <dbl>  <dbl>  <dbl>                 <POLYGON [°]>  <dbl>
+#> 1 臺北市 中山區 100790 223876 120156 103720 ((121.549 25.09124, 121.5489…  0.415
+#> 2 臺北市 中正區  65795 155397  81445  73952 ((121.512 25.04986, 121.5118…  0.416
+#> 3 臺北市 信義區  88952 215240 113069 102171 ((121.58 25.04946, 121.58 25…  0.389
+#> 4 臺北市 內湖區 109891 282525 147901 134624 ((121.5952 25.11452, 121.595…  0.437
+#> 5 臺北市 北投區  98131 250144 130088 120056 ((121.5761 25.19542, 121.576…  0.418
+#> # … with 2 more variables: 丁守中 <dbl>, 姚文智 <dbl>
+```
+
+### 5. `group_by()` 和 `summarize()`：
+
+請利用 `sf_tpe_join` 繪製 3 張圖，如果可以的話想辦法讓 3 張圖並排以方便比較，不行的話也沒關係。左邊放柯文哲、中間放丁守中、右邊放姚文智的得票率。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+
+### your result should be (參考)
+knitr::include_graphics('data/AS05/viz_ref.png')
+
+```
+

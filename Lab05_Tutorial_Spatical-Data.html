@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Lab05_Spatial-Data</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="曾子軒 Dennis Tseng" />
+    <script src="libs/header-attrs-2.13/header-attrs.js"></script>
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/metropolis-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Lab05_Spatial-Data
+## Spatial Data Manipulation and Visualization
+### 曾子軒 Dennis Tseng
+### 台大新聞所 NTU Journalism
+### 2022/05/05
+
+---
+
+
+
+&lt;style type="text/css"&gt;
+
+.remark-slide-content {
+    padding: 1em 1em 1em 1em;
+    font-size: 28px;
+}
+
+.my-one-page-font {
+  padding: 1em 1em 1em 1em;
+  font-size: 20px;
+  /*xaringan::inf_mr()*/
+}
+
+&lt;/style&gt;
+
+# 今日重點: Use R as GIS
+
+- 認識地理資訊格式
+- 認識地理資料結構 in R
+- 操作地理資料
+- 視覺化地理資料
+- Extra: Geometry Operations
+
+---
+# 今日目標
+
+&lt;img src="photo/端_map_choropleth.png" width="45%" height="45%" /&gt;&lt;img src="photo/viewsoftheworld_cartogram.png" width="45%" height="45%" /&gt;
+
+.pull-left[Taiwan 2020 Presidential Choropleth by [端傳媒](https://theinitium.com/article/20200112-taiwan-election-data-ntu/)]
+
+.pull-right[US 2016 Presidential Vote Share Map by [Views of the World](http://www.viewsoftheworld.net/wp-content/uploads/2016/11/USelection2016Cartogram.png)]
+
+---
+
+# 地理資訊格式
+
+&lt;img src="photo/Lab05_spatial_data.jpeg" width="40%" height="40%" /&gt;&lt;img src="photo/Lab05_spatial_data_02.jpeg" width="40%" height="40%" /&gt;
+
+.pull-left[[Geographic Information Systems and Science](https://andrewmaclachlan.github.io/CASA0005repo/index.html)]
+
+.pull-right[[Intro to GIS and Spatial Analysis
+](https://mgimond.github.io/Spatial/chp02-0.html)]
+
+---
+
+# 地理資訊格式
+- Vector vs. Raster, 向量 vs. 網格
+- The vector data model represents the world using points, lines and polygons.(點、線、多邊形)
+- The raster data model divides the surface up into cells of constant size.(切成固定大小的格子)
+- 來看一下[範例](https://dennistseng.shinyapps.io/taipeiapp/)
+
+---
+
+# Data: Taipei City Demography
+
+- 台北市民政局：[台北市各里人口數](https://data.taipei/#/dataset/detail?id=a6394e3f-3514-4542-87bd-de4310a40db3)和[台北市里界圖](https://data.taipei/#/dataset/detail?id=6b17b31d-4e16-495e-95b1-9fd1f47c80d8)，前者的資料格式為 `csv` ，後者為 `shapefile`
+- 內政部：[台北市人口統計_村里](https://segis.moi.gov.tw/STAT/Web/Platform/QueryInterface/STAT_QueryProductView.aspx?pid=E8C9BC9FA3B8955DB5ED36ECB95CC2B2&amp;spid=2379CCC54C5DD0F4FEC8CE65233993C4)與和[台北市人口統計_最小統計區](https://segis.moi.gov.tw/STAT/Web/Platform/QueryInterface/STAT_QueryProductView.aspx?pid=D71B7495F95BC7C4E9AA7D13F5148AD1&amp;spid=7ED8D58E129BC680)，資料格式則是 `csv` 和 `shapefile` 都有
+
+---
+
+class: inverse, center, middle
+
+# 請大家去看/下載一下資料，[內政部](https://segis.moi.gov.tw/STAT/Web/Platform/QueryInterface/STAT_QueryInterface.aspx?Type=1)可以抓你喜歡的縣市，不用侷限在台北
+
+---
+
+# File Format Introduction
+
+- `xlsx`/`ods`： 可以用 Excel/Google sheet 開啟的檔案格式，長相就是平常可以看到的試算表表格。政府單位常常以 `ods` 發布資料，台北市民政局的人口統計即是提供 `ods `
+- `csv`： comma separated value, 用逗點分隔欄位，是非常常見的檔案格式。無論政府或私人單位都會以 `csv` 發布資料
+- `tif`：儲存地理圖像的點陣圖格式，通常資料當中包含經緯度。衛星影像的原始格式即是 `tif`。
+- `shapefile`：儲存地理圖資的檔案格式，由 `shp`, `shx`, `dbf`, `prj` 所組成，分別紀錄了地理參照資料、索引、屬性、投影。通常提供地理圖資時，會提供包含 `shp`, `shx`, `dbf`, `prj`, 等格式的壓縮檔案。
+- `geojson`：基於 JSON 儲存地理資訊的檔案格式，內容包含空間範圍和屬性。
+
+---
+
+# File Format Introduction: Shapefile
+
+- 最常見的地理資訊格式，由 ERSI 發明，當中包含數個檔案
+    - `.shp`: 儲存幾何特徵
+    - `.shx`: 儲存 `.shp` 當中特徵的 index
+    - `.dbf`: 儲存屬性資訊，像是幾何特徵的名字或變數
+    - `.prj`: 儲存座標系統資訊 (coordinate system information) 
+- 這個格式常見到有人創了 [twitter account](https://twitter.com/shapefiIe)
+
+---
+
+# File Format Introduction: GeoJSON
+
+- 使用跟 JSON 類似的原始格式，但設計上有特別考慮在表現出地理特徵以外，也保留 non-spatial 的屬性
+- 地理特徵包含 points, line strings, polygons, and multi-part collections of these types.
+- [Processing of GeoJSON data in R](https://cran.r-project.org/web/packages/geojsonR/vignettes/the_geojsonR_package.html)
+
+&lt;img src="photo/R_example_geojson.png" width="55%" height="55%" /&gt;
+
+---
+
+# Data Structure: Simple Feature
+
+- sf, simple feature
+    - 可以想像成幾何圖形加上 data frame 的組合
+    - data frame 的內容就是區域的屬性(attribute)，像是人口
+    - 幾何圖形有很多種 e.g. point, line string, polygon
+    - 不是簡介的介紹: [Simple Features for R](http://r-spatial.github.io/sf/articles/sf1.html); photo [source](https://geocompr.robinlovelace.net/spatial-class.html#intro-sf)
+
+&lt;img src="photo/Lab05_sf_structure.png" width="30%" height="30%" /&gt;
+
+---
+
+# Data Structure: Simple Feature
+
+- 讀取原始資料
+    - 區分一下: file format &amp; data sturcture
+    - import shapefile/GeoJSON 到 R 裏面變成 sf
+    - `st_read()`, `dsn`(data source name) and `layer`(layer name)
+    - 雖然 `shp` 設計得很好，但還是盡量完整把其他檔案也讀進來
+
+
+```r
+library(tidyverse)
+library(sf)
+library(cartogram)
+library(maps)
+```
+
+---
+
+# Data Importing
+
+
+```r
+sf_tpe &lt;-
+  st_read(dsn = "data/Lab05/109年12月行政區人口統計_村里_臺北市_SHP/", layer = "109年12月行政區人口統計_村里", quiet = T) %&gt;%
+  mutate(across(where(is.character), ~iconv(., from = "BIG5", to = "UTF8"))) %&gt;%
+  rename_with(~str_to_lower(.), everything()) %&gt;% 
+  mutate(across(where(is.double), ~if_else(is.na(.),as.double(0),.))) %&gt;%
+  st_set_crs(3826) %&gt;% st_transform(4326) %&gt;% filter(str_detect(county, "臺北市")) %&gt;%
+  mutate(village = if_else(str_detect(village,"糖"),"糖廍里",village))
+```
+
+---
+
+# Data Importing
+
+
+```r
+sf_tpe
+```
+
+```
+## Simple feature collection with 456 features and 12 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: 121.4571 ymin: 24.9605 xmax: 121.6659 ymax: 25.21018
+## Geodetic CRS:  WGS 84
+## First 10 features:
+##    county   town village county_id  town_id         v_id village_id h_cnt p_cnt
+## 1  臺北市 文山區  樟新里     63000 63000080 63000080-031        031  2199  5697
+## 2  臺北市 文山區  老泉里     63000 63000080 63000080-037        037   362   923
+## 3  臺北市 文山區  樟腳里     63000 63000080 63000080-032        032  2108  5674
+## 4  臺北市 文山區  樟文里     63000 63000080 63000080-041        041  2374  6311
+## 5  臺北市 文山區  樟樹里     63000 63000080 63000080-043        043  1825  4898
+## 6  臺北市 文山區  順興里     63000 63000080 63000080-029        029  2902  7642
+## 7  臺北市 文山區  指南里     63000 63000080 63000080-036        036  1766  4108
+## 8  臺北市 文山區  樟林里     63000 63000080 63000080-030        030  3247  8424
+## 9  臺北市 文山區  忠順里     63000 63000080 63000080-038        038  1781  4213
+## 10 臺北市 文山區  試院里     63000 63000080 63000080-023        023  2808  6901
+##    m_cnt f_cnt info_time                       geometry
+## 1   2682  3015   109Y12M MULTIPOLYGON (((121.5595 24...
+## 2    485   438   109Y12M MULTIPOLYGON (((121.5715 24...
+## 3   2735  2939   109Y12M MULTIPOLYGON (((121.5691 24...
+## 4   3048  3263   109Y12M MULTIPOLYGON (((121.5599 24...
+## 5   2324  2574   109Y12M MULTIPOLYGON (((121.5625 24...
+## 6   3674  3968   109Y12M MULTIPOLYGON (((121.5678 24...
+## 7   2099  2009   109Y12M MULTIPOLYGON (((121.5799 24...
+## 8   4103  4321   109Y12M MULTIPOLYGON (((121.5585 24...
+## 9   1986  2227   109Y12M MULTIPOLYGON (((121.5683 24...
+## 10  3276  3625   109Y12M MULTIPOLYGON (((121.5507 24...
+```
+
+---
+
+# Simple Feature 的組成
+
+- 資料結構 - Simple feature collection
+- 幾何組成 - geometry type
+- 維度 - dimension
+- 地理區域 - bbox
+- 大地座標系統 - geographic CRS
+
+---
+
+# 馬上來畫一張圖
+
+
+```r
+sf_tpe %&gt;% ggplot() + geom_sf()
+```
+
+![](Lab05_Tutorial_Spatical-Data_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+---
+
+# 上個顏色
+
+
+```r
+sf_tpe %&gt;% ggplot(aes(fill = p_cnt)) + geom_sf(color = NA) +
+  scale_fill_gradient(low = "white", high = "purple")
+```
+
+![](Lab05_Tutorial_Spatical-Data_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+```r
+# 260 萬
+```
+
+---
+
+# 上個顏色
+
+
+```r
+sf_tpe %&gt;% mutate(p_density = p_cnt/(as.double(st_area(.))/1000000)) %&gt;%
+  ggplot(aes(fill = p_density)) + geom_sf(color = NA) + scale_fill_gradient(low = "white", high = "purple")
+```
+
+![](Lab05_Tutorial_Spatical-Data_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
+
+```r
+# 272 平方公里
+```
+
+---
+
+# 重要概念: 投影
+
+- 投影系統 = 告訴你怎麼在地圖上呈現資料的數學公式
+- 大地座標系統(geographic coordiate reference systems) 
+    - 視資料為球體，舉例: a minute type of resolution，代表把地球切成 360 度，每度有 60 分，每分有 60 秒
+    - 經緯: Arc-seconds of latitude (緯線) 幾乎保持固定，但 arc-seconds of longitude (經線) 越往極點會越小
+- 投影座標系統(projected coordinate reference systems)
+    - 視資料為二維平面，所以長寬、角度、面積都是固定的
+
+---
+
+# 重要概念: 投影
+
+&lt;img src="photo/Lab05_CRS.png" width="40%" height="40%" /&gt;&lt;img src="photo/Lab05_CRS_02.png" width="40%" height="40%" /&gt;
+
+.pull-left[geographic CRS, (0,0)是零度經線跟零度緯線的交叉]
+
+.pull-right[projected CRS, (0,0)是地圖上左下角]
+
+---
+
+# 重要概念: 投影
+
+- 考慮到上述兩種投影系統的差別，分析或視覺化的時候，因為尺度(scale)通常都是以國家、地區為單位，需要從立體投影到平面
+- 大部分國家/地區有自己的投影座標系統，也就是把中心(0,0)從地球中心移到國家/地區的中心
+- 區分: 以角度為單位(angular)，譬如 degrees, latitude and longitude，或者資料是全球尺度，則使用 GCRS，以線性為單位；譬如英尺、公尺，或者資料是地方尺度，則使用 PCRS
+
+---
+
+# 重要概念: 投影
+
+- 從立體到平面
+- 地球是立體的橢圓形，用參考橢球體(Ellipsoid)代表它
+- 會有一個跟參考橢球體相符的大地基準面，用來作為 CRS 的依據
+
+&lt;img src="photo/Lab05_CRS_03.jpg" width="40%" height="40%" /&gt;
+
+---
+
+# 重要概念: 投影
+
+- 每個區域都有適合的參考橢球體和大地基準面
+- 基準點(Datum)分為區域性的的(local)和全球的(global)，用來讓人從地球表面對應到笛卡兒座標系（就常見的 XY 啦XD）
+- global 最常用: WGS84，以地球質心為中心
+- local 最常用 TWD97，舊版是用 TWD67
+- 如果你是地理狂可以看[
+大地座標系統漫談](https://www.sunriver.com.tw/grid_tm2.htm)跟[座標系統介紹](http://140.121.160.124/GEO/%E5%BA%A7%E6%A8%99%E7%B3%BB%E7%B5%B1.pdf)
+
+---
+
+# 重要概念: 投影
+
+- proj4string
+    - 可以用來快速看 CRS 屬於哪種
+    - a compact way of identifying a coordinate reference system
+    - 組成包含 projection, datum, units, ellps, etc.，用 + 號分隔
+
+
+```r
+st_crs(sf_tpe)$proj4string
+```
+
+```
+## [1] "+proj=longlat +datum=WGS84 +no_defs"
+```
+
+---
+
+# 重要概念: 投影
+
+- EPSG
+    - 投影法有對應的代號稱為 EPSG(歐洲石油探勘組織)，他們制定了空間參考識別系統(SRID)
+    - 可以記兩個重要的: WGS84 = 4326, TWD97 = 3826
+
+
+```r
+st_crs(sf_tpe)
+```
+
+```
+## Coordinate Reference System:
+##   User input: EPSG:4326 
+##   wkt:
+## GEOGCRS["WGS 84",
+##     DATUM["World Geodetic System 1984",
+##         ELLIPSOID["WGS 84",6378137,298.257223563,
+##             LENGTHUNIT["metre",1]]],
+##     PRIMEM["Greenwich",0,
+##         ANGLEUNIT["degree",0.0174532925199433]],
+##     CS[ellipsoidal,2],
+##         AXIS["geodetic latitude (Lat)",north,
+##             ORDER[1],
+##             ANGLEUNIT["degree",0.0174532925199433]],
+##         AXIS["geodetic longitude (Lon)",east,
+##             ORDER[2],
+##             ANGLEUNIT["degree",0.0174532925199433]],
+##     USAGE[
+##         SCOPE["Horizontal component of 3D system."],
+##         AREA["World."],
+##         BBOX[-90,-180,90,180]],
+##     ID["EPSG",4326]]
+```
+
+---
+
+# 重要概念: 投影
+
+- 用得到投影的情境
+    - 研究區域，想轉換座標(changing projections)
+    - 原始資料就缺投影方法
+- 解方
+    - 修改 EPSG code 或是改掉 `proj4string` 的內容
+    - 加上 EPSG code 或是加上 `proj4string` 的內容
+- function
+    - `st_crs()` 取用
+    - `st_transform()` 變換
+    - `st_set_crs()` 設定
+
+---
+
+# 變換投影看看
+
+
+```r
+# sf_tpe %&gt;% st_crs_set(4326)
+sf_tpe %&gt;% st_transform(3826) %&gt;% st_crs()
+```
+
+```
+## Coordinate Reference System:
+##   User input: EPSG:3826 
+##   wkt:
+## PROJCRS["TWD97 / TM2 zone 121",
+##     BASEGEOGCRS["TWD97",
+##         DATUM["Taiwan Datum 1997",
+##             ELLIPSOID["GRS 1980",6378137,298.257222101,
+##                 LENGTHUNIT["metre",1]]],
+##         PRIMEM["Greenwich",0,
+##             ANGLEUNIT["degree",0.0174532925199433]],
+##         ID["EPSG",3824]],
+##     CONVERSION["Taiwan 2-degree TM zone 121",
+##         METHOD["Transverse Mercator",
+##             ID["EPSG",9807]],
+##         PARAMETER["Latitude of natural origin",0,
+##             ANGLEUNIT["degree",0.0174532925199433],
+##             ID["EPSG",8801]],
+##         PARAMETER["Longitude of natural origin",121,
+##             ANGLEUNIT["degree",0.0174532925199433],
+##             ID["EPSG",8802]],
+##         PARAMETER["Scale factor at natural origin",0.9999,
+##             SCALEUNIT["unity",1],
+##             ID["EPSG",8805]],
+##         PARAMETER["False easting",250000,
+##             LENGTHUNIT["metre",1],
+##             ID["EPSG",8806]],
+##         PARAMETER["False northing",0,
+##             LENGTHUNIT["metre",1],
+##             ID["EPSG",8807]]],
+##     CS[Cartesian,2],
+##         AXIS["easting (X)",east,
+##             ORDER[1],
+##             LENGTHUNIT["metre",1]],
+##         AXIS["northing (Y)",north,
+##             ORDER[2],
+##             LENGTHUNIT["metre",1]],
+##     USAGE[
+##         SCOPE["Engineering survey, topographic mapping."],
+##         AREA["Taiwan, Republic of China - between 120°E and 122°E, onshore and offshore - Taiwan Island."],
+##         BBOX[20.41,119.99,26.72,122.06]],
+##     ID["EPSG",3826]]
+```
+
+---
+
+class: inverse, center, middle
+
+# 投影講完惹！！再來下載一下整個台灣的[地理圖資](https://data.gov.tw/dataset/7442)
+
+---
+
+# 操作 sf
+
+- 可以用 `st_()` 開頭
+    - 引入圖資 `st_read()`, `st_as_sf()`
+    - 座標系統 `st_crs()`, `st_set_crs()`, `st_transform()`
+    - 處理圖資 `st_crop()`, `st_bbox()`, `st_simplify()`
+- 或者也可以用 `dplyr` 的動詞，`rename()`、`filter()`、`mutate()`、`select()`、`group_by()` 配 `summarize()`
+
+---
+
+# 操作 sf
+
+
+```r
+sf_taiwan &lt;-
+  st_read(dsn = "data/Lab05/直轄市縣市界線/", layer = "COUNTY_MOI_1090820", quiet = T) %&gt;%
+  rename_with(~str_to_lower(.), everything()) %&gt;% st_transform(3826)
+
+sf_taiwan
+```
+
+```
+## Simple feature collection with 22 features and 4 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: -478698 ymin: 1154437 xmax: 606875.6 ymax: 2919551
+## Projected CRS: TWD97 / TM2 zone 121
+## First 10 features:
+##    countyid countycode countyname         countyeng
+## 1         Z      09007     連江縣 Lienchiang County
+## 2         G      10002     宜蘭縣      Yilan County
+## 3         N      10007     彰化縣   Changhua County
+## 4         M      10008     南投縣     Nantou County
+## 5         P      10009     雲林縣     Yunlin County
+## 6         C      10017     基隆市      Keelung City
+## 7         A      63000     臺北市       Taipei City
+## 8         F      65000     新北市   New Taipei City
+## 9         B      66000     臺中市     Taichung City
+## 10        D      67000     臺南市       Tainan City
+##                          geometry
+## 1  MULTIPOLYGON (((146282.4 28...
+## 2  MULTIPOLYGON (((346997.1 27...
+## 3  MULTIPOLYGON (((194797.1 26...
+## 4  MULTIPOLYGON (((277507.6 26...
+## 5  MULTIPOLYGON (((156164 2602...
+## 6  MULTIPOLYGON (((321581.3 27...
+## 7  MULTIPOLYGON (((307543.1 27...
+## 8  MULTIPOLYGON (((304125.1 27...
+## 9  MULTIPOLYGON (((283293.5 27...
+## 10 MULTIPOLYGON (((192793.9 25...
+```
+
+---
+
+# 操作 sf
+
+
+```r
+sf_taiwan_simplify &lt;- sf_taiwan %&gt;% st_transform(3826) %&gt;% 
+  st_simplify(dTolerance = 100) %&gt;% st_transform(4326)
+sf_taiwan_simplify %&gt;% object.size()
+```
+
+```
+## 216736 bytes
+```
+
+```r
+sf_taiwan %&gt;% object.size()
+```
+
+```
+## 5471776 bytes
+```
+---
+
+# 操作 sf
+
+
+```r
+sf_taiwan_simplify %&gt;% st_bbox()
+```
+
+```
+##      xmin      ymin      xmax      ymax 
+## 114.35968  10.37135 124.56115  26.38394
+```
+
+---
+
+# 畫圖 - 4326
+
+
+```r
+sf_taiwan_simplify %&gt;% ggplot() + geom_sf()
+```
+
+![](Lab05_Tutorial_Spatical-Data_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+
+---
+
+# 畫圖 - 3826
+
+
+```r
+sf_taiwan_simplify %&gt;% st_transform(3826) %&gt;% ggplot() + geom_sf()
+```
+
+![](Lab05_Tutorial_Spatical-Data_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+---
+
+# 畫圖 - 切台灣本島
+
+- `filter()`
+
+
+```r
+sf_taiwan_simplify %&gt;% 
+  filter(! str_detect(countyname, "連江|金門|澎湖")) %&gt;%
+  ggplot() + geom_sf()
+```
+
+![](Lab05_Tutorial_Spatical-Data_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+---
+
+# 畫圖 - 切台灣本島
+
+- `st_crop()`
+
+
+```r
+sf_taiwan_simplify %&gt;% 
+  st_crop(xmin = 120, xmax = 122, ymin = 22, ymax = 25.5) %&gt;%
+  ggplot() + geom_sf()
+```
+
+![](Lab05_Tutorial_Spatical-Data_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+---
+
+class: inverse, center, middle
+
+# 再次回到面量圖！來畫 2020 總統大選得票
+
+---
+
+# Map: Choropleth
+
+&lt;ul&gt;
+&lt;li&gt;Definition
+    &lt;ul&gt;
+    &lt;li&gt;A choropleth map displays divided geographical areas or regions that are coloured in relation to a numeric variable.&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://www.r-graph-gallery.com/choropleth-map.html"&gt;Choropleth Map by the R Graph Gallery&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;li&gt;Process
+    &lt;ul&gt;
+    &lt;li&gt;Get Taiwan 2020 Election Results Data&lt;/li&gt;
+    &lt;li&gt;Decide the variable plotted, such as KMT vote per&lt;/li&gt;
+    &lt;li&gt;Join Election with Taiwan sf object&lt;/li&gt;
+    &lt;li&gt;Draw the map colored by the variable&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+
+---
+
+class: inverse, center, middle
+
+# R time: Choropleth
+
+---
+
+# Map: Dot Distribution Map/Bubble Map
+
+&lt;ul&gt;
+&lt;li&gt;Definition
+    &lt;ul&gt;
+    &lt;li&gt;Choropleths aggregate individual data points into a single geographic region. In contrast, a dot distribution/density map uses a dot symbol to show the presence of a feature or a phenomenon.&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://www.r-graph-gallery.com/bubble-map.html"&gt;Bubble map by the R Graph Gallery&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;li&gt;Process
+    &lt;ul&gt;
+    &lt;li&gt;Get Taiwan Cities Population Data&lt;/li&gt;
+    &lt;li&gt;Decide the variable plotted, such as city population&lt;/li&gt;
+    &lt;li&gt;Plot the base map and add city dots&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+
+---
+
+class: inverse, center, middle
+
+# R time: Dot Distribution Map
+
+---
+
+# Map: Cartogram
+
+&lt;ul&gt;
+&lt;li&gt;Definition
+    &lt;ul&gt;
+    &lt;li&gt;A cartogram is a map in which the geometry of regions is distorted in order to convey the information of an alternate variable.&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://www.r-graph-gallery.com/cartogram.html"&gt;Cartogram by the R Graph Gallery&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;li&gt;Process
+    &lt;ul&gt;
+    &lt;li&gt;Get Taiwan 2020 Election Results Data and population data&lt;/li&gt;
+    &lt;li&gt;Decide the variable for distortion, such as population&lt;/li&gt;
+    &lt;li&gt;Also decide the variable cared about, such as KMT vote per&lt;/li&gt;
+    &lt;li&gt;Distort the sf object based on the variable&lt;/li&gt;
+    &lt;li&gt;Plot the distorted map and colored by chosen variable&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+
+---
+
+class: inverse, center, middle
+
+# R time: Cartogram
+
+---
+
+# Map: Parliament Plots
+
+&lt;ul&gt;
+&lt;li&gt;Definition
+    &lt;ul&gt;
+    &lt;li&gt;A visual representations of the composition of legislatures that display seats colour-coded by party.&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://github.com/RobWHickman/ggparliament"&gt;ggparliament by RobWHickman&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://erocoar.github.io/ggpol/"&gt;ggpol by Frederik Tiedemann&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;li&gt;Process
+    &lt;ul&gt;
+    &lt;li&gt;Get Taiwan 2020 Parliament Raw Data&lt;/li&gt;
+    &lt;li&gt;Create x, y, and theta columns&lt;/li&gt;
+    &lt;li&gt;Plot Parliament Composition&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+
+---
+
+class: inverse, center, middle
+
+# R time: Parliament Plots
+
+---
+# Map: Hexmap
+
+&lt;ul&gt;
+&lt;li&gt;Definition
+    &lt;ul&gt;
+    &lt;li&gt;A a geospatial object where all regions of the map are represented as hexagons.&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://pitchinteractiveinc.github.io/tilegrams/"&gt;tilegramps showcase with JS&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://github.com/olihawkins/clhex"&gt;library(clhex)&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="https://olihawkins.com/project/hexjson-editor/"&gt;Hexmap Editor&lt;/a&gt;&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;li&gt;Process
+    &lt;ul&gt;
+    &lt;li&gt;Create empty Taiwan Constituency hexjson with library(clhex)&lt;/li&gt;
+    &lt;li&gt;Draw Taiwan Constituency with hexjson editor according to geographical posistion&lt;/li&gt;
+    &lt;li&gt;Import edited hexjson into R and plot with geom_sf()&lt;/li&gt;
+    &lt;li&gt;Export the .SVG for further use&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/ul&gt;
+
+---
+
+class: inverse, center, middle
+
+# R time: Hexmap
+
+---
+
+# Map: Summary
+
+&lt;ul&gt;
+&lt;li&gt;Plots
+    &lt;ul&gt;
+    &lt;li&gt;背景地圖/Background Map&lt;/li&gt;
+    &lt;li&gt;統計地圖/Choropleth&lt;/li&gt;
+    &lt;li&gt;點示地圖/Dot Distribution Map; Bubble Map&lt;/li&gt;
+    &lt;li&gt;示意地圖/Cartogram&lt;/li&gt;
+    &lt;li&gt;國會席次圖/Parliament Plots&lt;/li&gt;
+    &lt;li&gt;六邊型網格圖/Hexmap/Tilegram&lt;/li&gt;
+    &lt;/ul&gt;
+
+---
+
+# Some Map
+
+&lt;img src="photo/端_map_cartogram.png" width="45%" height="45%" /&gt;&lt;img src="photo/viewsoftheworld_cartogram.png" width="45%" height="45%" /&gt;
+
+.pull-left[Taiwan 2020 Presidential Choropleth by [端傳媒](https://theinitium.com/article/20200112-taiwan-election-data-ntu/)]
+
+.pull-right[US 2016 Presidential Vote Share Map by [Views of the World](http://www.viewsoftheworld.net/wp-content/uploads/2016/11/USelection2016Cartogram.png)]
+---
+# Some Map
+
+&lt;img src="photo/NYT_map_bubble.png" width="45%" height="45%" /&gt;&lt;img src="photo/端_map_hexbin.png" width="45%" height="45%" /&gt;
+
+.pull-left[US 2012 Presidential Vote Lead Map by [The New York Times](https://www.nytimes.com/interactive/2016/11/01/upshot/many-ways-to-map-election-results.html)]
+
+.pull-right[Taiwan 2020 Parliament Hexmap by [端傳媒](https://theinitium.com/article/20200112-taiwan-election-data-ntu-1/)]
+
+---
+# Some Map
+
+&lt;img src="photo/reddit_map_hex_swing.png" width="50%" height="50%" /&gt;&lt;img src="photo/關鍵_plot_parliament.png" width="50%" height="50%" /&gt;
+.pull-left[UK 2019 Parliament Swing Map by [TeHuia](https://www.reddit.com/r/MapPorn/comments/eah5j1/uk_2019_election_swing_map/)]
+
+.pull-right[Taiwan 2020 Parliament Plot by [關鍵評論網](https://www.thenewslens.com/article/129934)]
+
+---
+
+# 今日重點: Use R as GIS
+
+- 認識地理資訊格式
+- 認識地理資料結構 in R
+- 操作地理資料
+- 視覺化地理資料
+- Extra: Geometry Operations
+
+
+---
+
+# 之後有機會: 空間分析
+
+- [Geometry Operations](https://geocompr.robinlovelace.net/geometric-operations.html#buffers)
+    - [可達性空間](https://medium.com/ivc-invisiblecities/passive-space-remake-4faea442d78a)
+    - [重疊區域切分](https://medium.com/geopainter/%E7%94%A8%E6%8D%B7%E9%81%8B%E8%B3%87%E6%96%99%E8%A7%80%E5%AF%9F%E4%B9%98%E5%AE%A2%E7%9A%84%E7%A7%BB%E5%8B%95%E8%BB%8C%E8%B7%A1-%E4%B8%8B-22d70ea76ddb)
+    - [空間層級變換](https://medium.com/ivc-invisiblecities/%E5%8F%B0%E5%8C%97%E4%BA%BA%E5%8F%A3%E5%88%86%E5%B8%83%E5%9C%B0%E5%9C%96%E7%A9%BA%E9%96%93%E8%B3%87%E6%96%99%E7%9A%84%E5%B0%BA%E5%BA%A6%E8%AE%8A%E6%8F%9B-7278e319c5fe)
+- Spatial Analysis
+    - 熱點分析
+    - 空間自相關
+    - 熱區分析
+
+---
+
+class: inverse, center, middle
+
+# Thanks 
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"self_contained": true
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
