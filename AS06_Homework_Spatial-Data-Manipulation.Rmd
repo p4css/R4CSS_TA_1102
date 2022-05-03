@@ -126,7 +126,7 @@ sf_tpe %>% head(5)
 #> # … with 2 more variables: 丁守中 <dbl>, 姚文智 <dbl>
 ```
 
-### 5. `group_by()` 和 `summarize()`：
+### 5. spatial data visualization：
 
 請利用 `sf_tpe_join` 繪製 3 張圖，如果可以的話想辦法讓 3 張圖並排以方便比較，不行的話也沒關係。左邊放柯文哲、中間放丁守中、右邊放姚文智的得票率。
 
