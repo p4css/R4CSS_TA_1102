@@ -134,7 +134,7 @@ sf_tpe %>% head(5)
 ### your code
 
 ### your result should be (參考)
-knitr::include_graphics('data/AS05/viz_ref.png')
+knitr::include_graphics('data/AS06/viz_ref.png')
 
 ```
 
