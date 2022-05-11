@@ -8,7 +8,7 @@
 ### week12_05/05
 
 * LAB 05 Tutorial Spatial Data Manipulation [slide](https://p4css.github.io/R4CSS_TA_1102/Lab05_Tutorial_Spatial-Data.html), [R](https://github.com/p4css/R4CSS_TA_1102/blob/main/Lab05_Tutorial_Spatial-Data.R)
-* AS 05 Homework Spatial Data Manipulation [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS06_Homework_Spatial-Data-Manipulation.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS06_Homework_Spatial-Data-Manipulation.html) 
+* AS 06 Homework Spatial Data Manipulation [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS06_Homework_Spatial-Data-Manipulation.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS06_Homework_Spatial-Data-Manipulation.html) 
 * AS 05 Reference Web Scraping JSON [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS05_Homework_Web-Scraping-JSON_ref.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS05_Homework_Web-Scraping-JSON_ref.html) 
 
 ### week11_04/28

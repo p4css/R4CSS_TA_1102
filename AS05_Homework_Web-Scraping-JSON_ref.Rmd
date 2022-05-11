@@ -1,0 +1,172 @@
+---
+title: "AS05_Web-Scraping-JSON_ref"
+author: "曾子軒 Teaching Assistant"
+date: "2022/04/28"
+output:
+  html_document:
+    number_sections: no
+    theme: united
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'hold', comment = '#>', error = TRUE)
+```
+
+## 作業目的
+
+這份作業希望能夠讓你熟悉 Web Scraping 的流程，這週的重點會著重在 JSON。
+
+## A. scrape 104 & compare salary（50分）
+
+接續老師錄製的影片，請到 [104 人力銀行](https://www.104.com.tw/jobs/main/)，爬取「軟體工程」和「資料科學」兩種職業的搜尋結果，扣除面議的薪資不計，繪製圖表比較這 2 種職業的薪資差異，請自行思考適合的圖表類型與指標。
+
+你的程式碼應該包含 3 個部分：爬資料、清理資料如薪資與年資等欄位、視覺化，有些流程可能需要借助你的主觀判斷，請盡量搭配文字適度解釋你處理資料的過程。
+
+```{r message=FALSE, warning=FALSE}
+### your code
+library(httr)
+library(rvest)
+library(tidyverse)
+library(jsonlite)
+
+### 爬 data science
+# df_ds <- tibble()
+# for(i in 1:10){
+#   url_ds <- str_c("https://www.104.com.tw/jobs/search/list?ro=0&kwop=7&keyword=%E8%B3%87%E6%96%99%E7%A7%91%E5%AD%B8&expansionType=area%2Cspec%2Ccom%2Cjob%2Cwf%2Cwktm&order=15&asc=0&page=", i, "&mode=s&jobsource=2018indexpoc")
+#   json_ds <- url_ds %>% GET(add_headers('User-Agent' = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36',
+#                                         'Accept' = 'application/json, text/javascript, */*; q=0.01',
+#                                         'Referer' = 'https://www.104.com.tw')) %>% content("text") %>%fromJSON()
+#   df_tmp <- json_ds$data$list %>% as_tibble()
+# 
+#   df_ds <- df_ds %>% bind_rows(df_tmp)
+#   print(i)
+#   Sys.sleep(10)
+# }
+# 
+# ### 爬 software engineering
+# df_se <- tibble()
+# for(i in 1:10){
+#   url_se <- str_c("https://www.104.com.tw/jobs/search/list?ro=0&kwop=7&keyword=%E8%BB%9F%E9%AB%94%E5%B7%A5%E7%A8%8B&expansionType=area%2Cspec%2Ccom%2Cjob%2Cwf%2Cwktm&order=15&asc=0&page=", i, "&mode=s&jobsource=2018indexpoc")
+#   json_se <- url_se %>% GET(add_headers('User-Agent' = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36',
+#                                         'Accept' = 'application/json, text/javascript, */*; q=0.01',
+#                                         'Referer' = 'https://www.104.com.tw')) %>% content("text") %>%fromJSON()
+#   df_tmp <- json_se$data$list %>% as_tibble()
+# 
+#   df_se <- df_se %>% bind_rows(df_tmp)
+#   print(i)
+#   Sys.sleep(10)
+# }
+# 
+# df_ds %>% write_rds("data/AS05/df_ds.rds")
+# df_se %>% write_rds("data/AS05/df_se.rds")
+df_ds <- read_rds("data/AS05/df_ds.rds")
+df_se <- read_rds("data/AS05/df_se.rds")
+
+### 確認有沒有奇怪的東西混在裡面
+df_se %>% filter(str_detect(jobNameSnippet, "軟體|工程|[Ss]ofware [Ee]ngineer")|str_detect(description, "軟體|工程|[Ss]ofware [Ee]ngineer")) %>% select(jobNameSnippet) %>% sample_n(10)
+df_se %>% filter(str_detect(jobNameSnippet, "軟體|工程|[Ss]ofware [Ee]ngineer")|str_detect(description, "軟體|工程|[Ss]ofware [Ee]ngineer")) %>% select(description) %>% sample_n(10)
+
+df_ds %>% filter(str_detect(jobNameSnippet, "資料科學|資料分析|[Da]ata [Ss]cientist")|str_detect(description, "資料科學|資料分析")) %>% select(jobNameSnippet) %>% sample_n(10)
+df_ds %>% filter(str_detect(jobNameSnippet, "資料科學|資料分析|[Da]ata [Ss]cientist")|str_detect(description, "資料科學|資料分析")) %>% select(description) %>% sample_n(10)
+
+### 清理資料
+df_se_clean <- df_se %>% filter(str_detect(jobNameSnippet, "軟體|工程|[Ss]ofware [Ee]ngineer")|str_detect(description, "軟體|工程|ata scientist")) %>%
+  filter(!str_detect(jobNameSnippet, "QA|軟體測試")) %>%
+  select(matches("salary|period")) %>% filter(!str_detect(salaryDesc, "待遇面議")) %>%
+  mutate(salaryLow = as.integer(salaryLow), salaryHigh = as.integer(salaryHigh)) %>%
+  mutate(salaryLow = if_else(str_detect(salaryDesc, "時薪"), as.integer(salaryLow*8*22), salaryLow), 
+         salaryHigh = if_else(str_detect(salaryDesc, "時薪"), as.integer(salaryHigh*8*22), salaryHigh)) %>%
+  mutate(salaryLow = if_else(str_detect(salaryDesc, "年薪"), as.integer(salaryLow/12), salaryLow), 
+         salaryHigh = if_else(str_detect(salaryDesc, "年薪"), as.integer(salaryHigh/12), salaryHigh)) %>%
+  mutate(salaryHigh = if_else(salaryHigh == 9999999, as.integer(salaryLow + 40000), salaryHigh)) %>%
+  mutate(salary_mean = (salaryLow+salaryHigh)/2) %>% 
+  mutate(periodDesc = if_else(str_detect(periodDesc, "不拘"), "經歷不拘", "要求年資")) %>%
+  mutate(type = "軟體工程")
+
+df_ds_clean <- df_ds %>% filter(str_detect(jobNameSnippet, "資料科學|資料分析|[Da]ata [Ss]cientist")|str_detect(description, "資料科學|資料分析")) %>%
+  select(matches("salary|period")) %>% filter(!str_detect(salaryDesc, "待遇面議")) %>%
+  mutate(salaryLow = as.integer(salaryLow), salaryHigh = as.integer(salaryHigh)) %>%
+  mutate(salaryLow = if_else(str_detect(salaryDesc, "時薪"), as.integer(salaryLow*8*22), salaryLow), 
+         salaryHigh = if_else(str_detect(salaryDesc, "時薪"), as.integer(salaryHigh*8*22), salaryHigh)) %>%
+  mutate(salaryLow = if_else(str_detect(salaryDesc, "年薪"), as.integer(salaryLow/12), salaryLow), 
+         salaryHigh = if_else(str_detect(salaryDesc, "年薪"), as.integer(salaryHigh/12), salaryHigh)) %>%
+  mutate(salaryHigh = if_else(salaryHigh == 9999999, as.integer(salaryLow + 40000), salaryHigh)) %>%
+  mutate(salary_mean = (salaryLow+salaryHigh)/2) %>% 
+  mutate(periodDesc = if_else(str_detect(periodDesc, "不拘"), "經歷不拘", "要求年資")) %>%
+  mutate(type = "資料科學") 
+
+### 畫圖
+df_se_clean %>% bind_rows(df_ds_clean) %>%
+  ggplot(aes(x = type, y = salary_mean, fill = type)) + geom_boxplot() +
+  coord_flip() +
+  facet_wrap(periodDesc ~ ., nrow = 2) +
+  scale_y_continuous(labels = scales::number_format(suffix = "k", scale = 1e-3)) +
+  theme_bw() +
+  guides(fill = FALSE) +
+  labs(x= "職缺類型",y= "平均月薪", title = "104人力銀行資料科學與軟體工程職缺的薪資分佈", caption = "資料：各爬取約 200 筆後剔除無關者") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(text = element_text(family = "Noto Sans CJK TC Medium"))
+```
+
+## B. scrape google trend（50分）
+
+### (1) scraping（30分）
+
+請到 [Google 每日搜尋趨勢](https://trends.google.com.tw/trends/trendingsearches/daily?geo=TW)，以**抓取 JSON 的方式**，爬下最近一週的搜尋趨勢結果，這裡的一週沒有規定具體日期，從你做作業當天為基礎即可。
+
+結果部分請加入**日期**欄位，先印出前 10 個列，接著印出各個日期的筆數（參考程式碼：```df %>% count(date)```）。
+
+提示：
+a. API url 的長相類似這樣 - "https://trends.google.com.tw/trends/api/"，後面還有東西，可以去找一下      
+b. 可以用迴圈寫，並且在迴圈中更新 API url 的日期    
+c. 直接用 `fromJSON()` 會出事，因為 Google 很壞，它故意在結果的前 5 個字塞入不相干的東西阻礙你，建議你可以用 `str_sub()` 抓取正確的字串再轉換成 JSON
+
+```{r message=FALSE, warning=FALSE}
+### your code
+# date_start <- 20220427
+# index_now <- 1
+# i <- index_now
+# df_res <- tibble()
+# for (i in index_now:7) {
+#   i <- index_now
+#   url <- str_c("https://trends.google.com.tw/trends/api/dailytrends?hl=zh-TW&tz=-480&geo=TW&ns=15&ed=", (date_start+1-i))
+#   res <- GET(url)
+#   raw <- res %>% content("text")
+#   res_json <- str_sub(raw, 6, str_length(raw)) %>% fromJSON()
+#   # res_json %>% str()
+#   df_res_tmp <- res_json$default$trendingSearchesDays$trendingSearches[[1]] %>% as_tibble() %>%
+#     mutate(date = date_start+1-i)
+#   df_res <- df_res %>% bind_rows(df_res_tmp)
+#   message(i)
+#   index_now <- index_now + 1
+#   Sys.sleep(10)
+# }
+# df_res %>% write_rds("data/AS05/df_res.rds")
+df_res <- read_rds("data/AS05/df_res.rds")
+df_res %>% head(10)
+df_res %>% count(date)
+```
+
+### (2) cleaning（20分）
+
+這個資料的原始結構有點複雜，請嘗試列出 `id`, `date`, `query`, `formattedTraffic`, `title`, `source`, `url`, `snippet` 等欄位。其中，`id` 和 `date` 是自行加入的欄位，其他都是上一小題就能抓到的結果。這題比較難，所以配分低一些。
+
+提示：
+a. `id`: 可以利用 `mutate(id = row_number())`    
+b. 原始的 dataframe 不是一般常見的 dataframe，有些 column 本身是 list，又被稱為 nested dataframe，處理起來很麻煩，建議可以用 `$`   
+c. 會用到 2 次 `left_join()`   
+
+```{r message=FALSE, warning=FALSE}
+df_res$title %>% as_tibble() %>% mutate(id = as.character(row_number())) %>%
+  left_join(df_res$articles %>% bind_rows(.id = "id") %>%
+              as_tibble()) %>%
+  left_join(df_res %>% select(formattedTraffic, date) %>% mutate(id = as.character(row_number()))) %>%
+  select(id, date, query, formattedTraffic, title, source, url, snippet) %>%
+  arrange(desc(date))
+```
