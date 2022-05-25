@@ -1,0 +1,407 @@
+---
+title: "Lab06_function-purrr"
+subtitle: "Writing Functions and using purrr"
+author: "曾子軒 Dennis Tseng"
+institute: "台大新聞所 NTU Journalism"
+date: "2022/05/26"
+output:
+  xaringan::moon_reader:
+    css: [default, metropolis, metropolis-fonts]
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      self_contained: true
+---
+```{r setup, cache = F, echo=F}
+knitr::opts_chunk$set(error = TRUE)
+```
+
+<style type="text/css">
+
+.remark-slide-content {
+    padding: 1em 1em 1em 1em;
+    font-size: 28px;
+}
+
+.my-one-page-font {
+  padding: 1em 1em 1em 1em;
+  font-size: 20px;
+  /*xaringan::inf_mr()*/
+}
+
+</style>
+
+
+# 今日重點
+
+- Web Scraping
+- function
+- purrr
+
+---
+
+# Web Scraping - HTML
+
+- 基本架構
+     - 試錯: 先拿單一網址練習，確定可以再寫迴圈
+     - 迴圈外: 迴圈外放空的 tibble、index(現在在哪)、length(迴圈長度)
+     - 迴圈內: 切分讀 html, 讀每個 nodes, 把讀到的 nodes 合併, index 和訊息, **以及休息**
+
+---
+
+# Web Scraping - HTML
+
+```{r, message=F,warning=F,eval=F}
+# test
+library(tidyverse)
+library(httr)
+library(rvest)
+url_test <- "https://tw.feature.appledaily.com/charity/projlist/1"
+html <- url %>% 
+  curl::curl(handle = curl::new_handle("useragent" = "Mozilla/5.0")) %>% read_html()
+link <- html %>% 
+  html_nodes(".artcatdetails") %>% html_attr("href")
+link_detail <- html %>% 
+  html_nodes(".details") %>% html_attr("href")
+```
+
+---
+
+# Web Scraping - HTML
+
+```{r, message=F,warning=F,eval=F}
+# loop
+p_read_html <- possibly(read_html, otherwise = NULL)
+
+df_case_list <- tibble()
+for(i in 1:10){
+  url <- str_c("https://tw.feature.appledaily.com/charity/projlist/", i)
+  html <- url %>% 
+    curl::curl(handle = curl::new_handle("useragent" = "Mozilla/5.0")) %>% p_read_html()
+  link <- html %>% html_nodes(".artcatdetails") %>% html_attr("href")
+  link_detail <- html %>% html_nodes(".details") %>% html_attr("href")
+  df_case_list_tmp <- dtibble(link = link, link_detail = link_detail)
+  df_case_list <- df_case_list %>% bind_rows(df_case_list_tmp)
+  print(i)
+  Sys.sleep(20)
+}
+
+```
+---
+
+# Web Scraping - HTML
+
+- 考慮
+     - 如果網址掛了怎麼辦？
+     - 缺 nodes 產生空值？長度不一樣？
+     - 如果跑到一半網路斷了怎麼辦？
+     - 怎樣才比較不容易被發現是爬蟲？
+     - 怎樣才比較不會出事被告？
+     - 爬很久怎麼辦？
+---
+
+# Web Scraping - HTML
+
+- 對策
+     - 網址掛了 -> 寫 `ifelse` 處理網址掛掉
+     - 缺 nodes -> 不管結果如何都要補空值
+     - 網路斷了 -> 可以考慮把錯誤存起來
+     - 網路斷了 -> 列印 index 並儲存當下進度
+     - 不被發現/吿 -> 對人家有禮貌一點
+     - 爬很久 -> 用 map 爬快點
+
+---
+
+```{r, message=F,warning=F,eval=F}
+library(polite)
+session <- bow("https://tw.feature.appledaily.com/charity/projlist/1", force = TRUE)
+result <- scrape(session) %>%
+  html_node(".artcatdetails") %>% 
+  html_text()
+```
+
+---
+
+class: inverse, center, middle
+
+# [範例 - 蘋果日報基金會](https://github.com/p4css/R4CSS_TA_1102/scrape_appledoundation.R)
+
+---
+
+# 寫函數
+
+- Datacamp 上的 [Introduction to Writing Functions in R
+](https://learn.datacamp.com/courses/introduction-to-writing-functions-in-r)
+- 為什麼要寫函數: DRY, [Do not Repeat Yourself](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself)
+ - 把很多行程式碼組成有意義的區塊
+ - 有了函數之後，就算有些值改變，只需要更改使用者輸入的參數即可
+ - 避免複製貼上時出錯
+- 時機若對就要自己寫函數: 當你一直複製貼上的時候
+- 寫函數的步驟
+ - 思考你想透過這個函數達成什麼，通常就是複製貼上的部分
+ - 想一個合適貼切而且易懂的名字，不要寫 `function_01()`
+ - 列出使用者輸入的參數，放在 `function(){}` 的括號裡面
+ - 列出函數內部的運作，放在 `function(){}` 的中括號裡面
+
+---
+
+# 寫函數
+
+- 一個不那麼生活化的例子，但很易懂
+- 你有個特殊的運算需求，但沒人寫過相關函數
+```{r message=F, warning=F}
+ten_time_add_two <- function(x){
+  y = x * 10 + 2
+  print(y)
+}
+
+ten_time_add_two(1)
+```
+
+---
+
+# 寫函數
+
+- 一個生活化的例子
+- 你有個特殊的評論需求，但沒人寫過相關函數
+```{r message=F, warning=F}
+bad_reply <- function(name_seller){
+  value_bad <- "真的很差勁"
+  stringr::str_c(name_seller, value_bad)
+}
+
+bad_reply("賣家b04701103")
+bad_reply(c("賣家b04701103","賣家r09342011","賣家ooxx"))
+```
+
+---
+
+# 寫函數 - 注意事項
+
+- 取名字
+ - 不要太長也不要太短 e.g. `g()`, `first_add3_then_time10()`
+ - 不要沒意義 e.g. `elegant_function()`
+ - 不要不一致 e.g. `get_second()` & `GET.THIRD()`
+ - 相同開頭(prefix) 為佳 e.g. `remove_second()` & `remove_third()` 
+ - 不要惡搞已經有的函數 e.g. `sum <- function(x){mean(x)}`
+- 參數 argument 
+ - 使用者輸入的東西跟你想得很不一樣
+ - 你希望輸入是日期但可能會有數字、字串等等
+ - 可以加上 `if else` 語句判斷後再執行以免出錯
+ - 可以不只一個 argument，也可以有預設值
+
+---
+
+# 寫函數 - 注意事項
+
+```{r message=F, warning=F, eval=F}
+bad_reply <- function(name_seller, score = 1, value_bad = "真的很差勁"){
+  if(!is.integer(score)){
+    print("請重新輸入: score 為 1 - 5 的正整數")
+  } else {
+  stringr::str_c(name_seller, value_bad, " 怒給", score, "星")
+  }
+}
+
+bad_reply("賣家b04701103", score = 2)
+bad_reply("賣家r09342011", "沒有誠信")
+bad_reply("賣家ooxx", score = 1.2)
+bad_reply("賣家ooxx", score = "爛")
+```
+
+---
+# 寫函數 - 注意事項
+
+- 環境
+ - global, 整個大環境
+ - local, 函數裡面的環境, 不影響大環境
+
+```{r message=F, warning=F}
+y = 1
+add_five <- function(x){y = x + 5; return(y)}
+add_five(3)
+y
+```
+
+---
+
+# 寫函數 - 注意事項
+
+- 最重要的就是 Do not Repeat Yourself 同時也避免複製貼上出錯
+- 名字要好好取，要有意義、有一致性、不要太長也不要太短
+- 參數可以有很多個，也可以有預設值
+- 使用者輸入的跟你想的可能不一樣，可能需要處理例外的 branch
+- 函數的環境跟整個大環境是分開的
+
+---
+# purrr
+
+- `map(.x, .f, ...)`
+- Apply a function to each element of a list or atomic vector
+- 前面放對象，後面放函數 e.g. 
+
+```{r, out.width='65%', out.height='65%', echo=FALSE, message=F, warning=F}
+library(tidyverse)
+knitr::include_graphics('photo/Lab09_map_description.png')
+```
+
+ref: [數據科學中的 R 語言](https://bookdown.org/wangminjie/R4DS/purrr.html#purrr-1)
+
+---
+
+# purrr
+
+- 問：底下的 list 要怎麼取每個同學的平均分數？
+
+```{r, message=F,warning=F}
+exams <- list(
+  student1 = c(100,80,70),
+  student2 = c(90,60,50),
+  student3 = c(20,90,55)
+)
+
+exams
+```
+
+---
+
+# purrr
+
+```{r, message=F,warning=F,eval=F}
+# base
+mean(exams$student1)
+mean(exams$student2)
+mean(exams$student3)
+
+# purrr
+exams %>% map(mean)
+exams %>% map_dbl(mean)
+exams %>% map_df(mean)
+```
+
+---
+
+# purrr
+
+- 圖解
+
+```{r, out.width='65%', out.height='65%', echo=FALSE}
+knitr::include_graphics('photo/Lab09_map_description02.png')
+```
+
+---
+
+# purrr
+
+- 換一張圖解
+
+```{r, out.width='45%', out.height='45%', echo=FALSE}
+knitr::include_graphics('photo/Lab09_map_01.jpeg')
+```
+
+ref: [@_ColinFay](https://twitter.com/_ColinFay/status/1045257504446443520)
+
+---
+
+# purrr
+
+- 前面放對象，後面放函數 e.g. `map(.x, .f, ...)`
+- 前面的對象可以是 vector，也可以是 list
+- 函數可以正規表達，也可以用匿名函數
+
+```{r, message=F,warning=F,eval=F}
+# .x 放 vector
+url <- str_c("https://tw.feature.appledaily.com/charity/projdetail/", c("A5135", "A5134", "A5133"))
+url %>% map(read_html)
+# .x 放 list
+exams %>% map(mean)
+```
+---
+
+# purrr
+
+- 前面放對象，後面放函數 e.g. `map(.x, .f, ...)`
+- 前面的對象可以是 vector，也可以是 list
+- 函數可以正規表達，也可以用匿名函數
+
+```{r, message=F,warning=F,eval=F}
+# .f
+exams %>% map(function(x){(x + 5)^2})
+exams %>% map(~(. + 5)^2)
+exams %>% map(. %>% mean() %>% sqrt())
+exams %>% map(. %>% mean() %>% `^`(3))
+```
+
+---
+
+# Anonymous Function 匿名函數
+
+- function
+      - 平常寫函數
+      - 但為了方便也可以不要寫完整，一次性使用
+      - `.` 點點代表前面的變數/資料
+- 匿名函數的形式
+      - `~ function(x){sqrt(mean(x))}`
+      - `~ (sqrt(mean(.)))`
+      - `~ . %>% mean() %>% sqrt()`
+
+---
+
+# purrr
+
+- 有 `map(.x)`, `map2(.x, .y)`, `pmap(.l)`
+
+```{r, out.width='45%', out.height='45%', echo=FALSE}
+knitr::include_graphics('photo/Lab09_map_03.jpeg')
+knitr::include_graphics('photo/Lab09_map2_02.jpeg')
+```
+
+---
+
+# purrr
+
+- 有 `map(.x)`, `map2(.x, .y)`, `pmap(.l)`
+
+```{r message=F, warning=F,eval=F}
+weight <- c(1,1,2)
+weight_diff <- list(c(1, 1, 2), c(1, 2, 1), c(2, 1, 1))
+
+mean_weight <- function(x, y){
+  if(length(x)==length(y)){sum(x*y)/sum(y)}
+  else{print("length - bad")}
+}
+map(exams, ~mean_weight(x=., y=weight))
+map2(exams, weight, mean_weight)
+```
+
+---
+
+# purrr
+
+- 運用在 web scraping 的好時機
+- 一次爬**多個網址**的時候
+- 舉例來說，爬文章列表不需要 `map`，但是爬每篇文章的時候就可以用
+
+```{r message=F, warning=F,eval=F}
+df_zec_main[j:k,] %>% 
+  pull(title_link) %>% 
+  str_c("https://www.zeczec.com", .) %>%
+    map(function(x){
+      x %>% 
+        curl::curl(handle = curl::new_handle("useragent" = "Mozilla/5.0")) %>% 
+        read_html()
+      })
+```
+
+
+
+---
+
+class: inverse, center, middle
+
+# 結束了！
+
+
+

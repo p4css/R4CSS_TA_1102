@@ -1,5 +1,9 @@
 # R4CSS_TA
 
+### week15_05/26
+
+* LAB 06 Tutorial Writing Functions and using purrr [slide](https://p4css.github.io/R4CSS_TA_1102/Lab06_Tutorial_function-purrr.html), [R](https://github.com/p4css/R4CSS_TA_1102/scrape_appledoundation.R)
+
 ### week14_05/19
 
 * AS 08 Homework Web Scraping HTML [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS08_Web-Scraping-HTML.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS08_Web-Scraping-HTML.html) 
