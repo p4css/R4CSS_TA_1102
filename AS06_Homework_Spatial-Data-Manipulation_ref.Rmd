@@ -1,0 +1,136 @@
+---
+title: "AS06_Homework_Spatial-Data-Manipulation_ref"
+author: "曾子軒 Teaching Assistant"
+date: "2022/05/05"
+output:
+  html_document:
+    number_sections: no
+    theme: united
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'hold', comment = '#>', error = TRUE)
+```
+
+## 作業目的:   
+
+這份作業利用[](https://db.cec.gov.tw/ElecTable/Election?type=Mayor) 2018 年台北市市長選舉的得票資料，以及內政部的[台北市村里人口統計](https://segis.moi.gov.tw/STAT/Web/Platform/QueryInterface/STAT_QueryProductView.aspx?pid=E8C9BC9FA3B8955DB5ED36ECB95CC2B2&spid=2379CCC54C5DD0F4FEC8CE65233993C4)，希望能夠讓你熟悉操作空間資料的流程。
+
+其中，台北市村里人口統計裡面的 `h_cnt` 代表「戶數」， `p_cnt` 代表「人數」， `m_cnt` 代表「男性人數」， `f_cnt` 代表「女性人數」。
+
+```{r message=FALSE, warning=FALSE}
+### 這邊不要動
+library(tidyverse)
+library(sf)
+
+df_mayor_tpe <- read_csv("data/AS06/df_mayor_tpe.csv")
+sf_tpe <-
+  st_read(dsn = "data/AS06/109年12月行政區人口統計_村里_臺北市_SHP/", layer = "109年12月行政區人口統計_村里", quiet = T) %>%
+  mutate(across(where(is.character), ~iconv(., from = "BIG5", to = "UTF8"))) %>%
+  rename_with(~str_to_lower(.), everything()) %>% 
+  mutate(across(where(is.double), ~if_else(is.na(.),as.double(0),.))) %>%
+  st_set_crs(3826) %>% st_transform(4326) %>% filter(str_detect(county, "臺北市")) %>%
+  mutate(village = if_else(str_detect(village,"糖"),"糖廍里",village)) %>%
+  select(-matches("_id"), -info_time)
+
+### 給你看資料長這樣
+df_mayor_tpe %>% head(5)
+sf_tpe %>% head(5)
+```
+
+### 1. spatial data manipulation：
+
+請利用 `sf_tpe` ，計算代表每個村里女性佔比的欄位 `f_per`，以及代表台北市人數排行的 `p_ranking`（人最多的村里排名 = 1），接著按照 `f_per`，由大到小排列，最後將這個 `sf` 型態的資料轉成 `tibble`，選擇 `county`, `town`, `village`, `f_per`, `p_ranking` , `p_cnt` 共 6 個欄位, 並印出前 5 列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+sf_tpe %>% mutate(f_per = f_cnt/p_cnt) %>% 
+  arrange(desc(p_cnt)) %>% mutate(p_ranking = row_number()) %>%
+  arrange(desc(f_per)) %>%
+  slice(1:5) %>% as_tibble() %>% select(1:3, f_per, p_ranking, p_cnt)
+
+### result
+
+```
+
+### 2. data pivoting：
+
+請將 `df_mayor_tpe` 轉成寬表格後印出，推上成為寬表格的欄位包含 3 位候選人，數值則是得票率，並將結果儲存到 `df_mayor_tpe` 中，印出前 5 列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+df_mayor_tpe_wider <- df_mayor_tpe %>% select(-`號次`, -`得票數`) %>%
+    pivot_wider(names_from = `姓名`, values_from = `得票率`)
+
+df_mayor_tpe_wider %>% head(5)
+### result
+
+```
+
+### 3. aggregating spatial data：
+
+請利用 `sf_tpe` ，以縣市和鄉鎮市區為單位，計算彙總後的戶數、人數、男性人數、女性人數，將資料儲存在 `sf_tpe_agg`，並且印出前 5 列。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+sf_tpe_agg <- sf_tpe %>% group_by(county, town) %>% summarise(h_cnt = sum(h_cnt), p_cnt = sum(p_cnt),
+                                                              f_cnt = sum(f_cnt), m_cnt = sum(m_cnt)) %>%
+  ungroup()
+  
+sf_tpe_agg %>% head(5)
+  
+### result
+```
+
+### 4. joining data：
+
+請串起 `sf_tpe_agg` 和 `df_mayor_tpe_wider`，把資料儲存在 `sf_tpe_join` 後，印出前 5 列
+
+```{r message=FALSE,warning=FALSE}
+### your code
+sf_tpe_join <- sf_tpe_agg %>% left_join(df_mayor_tpe_wider)
+sf_tpe_join %>% head(5)
+
+### result
+```
+
+### 5. `group_by()` 和 `summarize()`：
+
+請利用 `sf_tpe_join` 繪製 3 張圖，如果可以的話想辦法讓 3 張圖並排以方便比較，不行的話也沒關係。左邊放柯文哲、中間放丁守中、右邊放姚文智的得票率。
+
+```{r message=FALSE,warning=FALSE}
+### your code
+plot_ko <- sf_tpe_join %>% mutate(town2 = str_remove(town, "區")) %>%
+  ggplot(aes(fill = 柯文哲)) + geom_sf(color = NA) +
+  scale_fill_gradient(low = "white", high = "#28C8C8") + ggthemes::theme_map() + 
+  labs(title = "2018 台北市長選舉得票率") + 
+  theme(legend.position="bottom") +
+  theme(text = element_text(family = "Noto Sans CJK TC Medium")) +
+  geom_sf_text(aes(label = town2), family = "Noto Sans CJK TC Medium", size = 3)
+
+plot_ting <- sf_tpe_join %>% mutate(town2 = str_remove(town, "區")) %>%
+  ggplot(aes(fill = 丁守中)) + geom_sf(color = NA) +
+  scale_fill_gradient(low = "white", high = "#000095") + ggthemes::theme_map() + 
+  labs(title = "2018 台北市長選舉得票率") + 
+  theme(legend.position="bottom") +
+  theme(text = element_text(family = "Noto Sans CJK TC Medium")) +
+  geom_sf_text(aes(label = town2), family = "Noto Sans CJK TC Medium", size = 3)
+
+plot_yao <- sf_tpe_join %>% mutate(town2 = str_remove(town, "區")) %>%
+  ggplot(aes(fill = 姚文智)) + geom_sf(color = NA) +
+  scale_fill_gradient(low = "white", high = "#1B9431") + ggthemes::theme_map() + 
+  labs(title = "2018 台北市長選舉得票率") + 
+  theme(legend.position="bottom") +
+  theme(text = element_text(family = "Noto Sans CJK TC Medium")) +
+  geom_sf_text(aes(label = town2), family = "Noto Sans CJK TC Medium", size = 3)
+
+### result
+gridExtra::grid.arrange(plot_ko,plot_ting,plot_yao,nrow=1)
+
+```
+
