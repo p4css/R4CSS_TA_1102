@@ -1,0 +1,203 @@
+---
+title: "AS08_Web-Scraping-HTML_ref"
+author: "曾子軒 Teaching Assistant"
+date: "2022/05/19"
+output:
+  html_document:
+    number_sections: no
+    theme: united
+    highlight: tango
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, results = 'markup', comment = '#>', error = TRUE)
+```
+
+### 題目說明
+
+這份作業希望能夠讓你熟悉 Web Scraping 的流程，這週的重點會著重在 html。
+
+## A. scrape appledaily foundation（50分）
+
+本次作業的案例為[蘋果基金會的捐款平台](https://tw.feature.appledaily.com/charity/projlist/1)，請抓取捐款案的最近 10 頁資料，並整理出 2 個 dataframe，且分為以下欄位：
+- df_case_list，包含捐款案id(case_id)、新聞標題(title)、捐款案時間(date)、捐款案狀態(status)、捐款總額(amount)、新聞連結(link)、捐款明細連結(link_detail)   
+- df_case_donation，包含捐款案id(case_id)、捐款明細連結(link_detail)、捐款者(donator)、捐款金額(donation)、捐款時間(donate_date)
+
+另外，請注意以下幾點
+- 請去掉下方程式碼的註解(檢查部分) 以驗證你所抓到的資料未有重複
+- 用橫向 bar chart 印出捐款次數最多的前十大單位或個體（注意，個體可能是以全形或半形逗號分隔。先不處理填錯名字的問題、也暫時不考慮如「XXX全家」的問題）
+- 請用 `glimpse()` 分別呈現上述 tibble 的長相
+
+### 作答區 - 爬蟲程式碼
+
+```{r message=FALSE, warning=FALSE}
+### your code
+library(tidyverse)
+# library(httr)
+# library(rvest)
+# 
+# p_read_html <- possibly(read_html, otherwise = NULL)
+# 
+# ##### 抓案例
+# df_case_list <- tibble()
+# for(i in 1:10){
+#   url <- str_c("https://tw.feature.appledaily.com/charity/projlist/", i)
+#   html <- url %>% curl::curl(handle = curl::new_handle("useragent" = "Mozilla/5.0")) %>% p_read_html()
+#   table <- html %>% html_table()
+#   df_table <- 
+#     table[[1]] %>% as_tibble() %>% slice(-1) %>% `colnames<-`(c("case_id", "title", "date", "status", "amount", "detail"))
+#   
+#   link <- html %>% html_nodes(".artcatdetails") %>% html_attr("href")
+#   link_detail <- html %>% html_nodes(".details") %>% html_attr("href")
+#   df_case_list_tmp <- df_table %>% bind_cols(tibble(link = link, link_detail = link_detail))
+#   
+#   df_case_list <- df_case_list %>% bind_rows(df_case_list_tmp)
+#   print(i)
+#   Sys.sleep(20)
+# }
+# 
+# df_case_list
+# df_case_list %>% distinct(case_id)
+# df_case_list %>% write_rds("data/AS08/df_case_list.rds")
+# df_case_list %>% write_csv("data/AS08/df_case_list.csv")
+# 
+# ##### 抓捐款清單
+# df_case_donation <- tibble()
+# index_now <- 1
+# index_length <- ceiling(dim(df_case_list)[1]/10)
+# 
+# for(i in index_now:index_length){
+#   j = i*10-9
+#   k = j+9
+#   url = df_case_list %>% select(link_detail) %>% slice(j:k) %>% pull() 
+#   
+#   html = url %>% map(function(x){x %>% curl::curl(handle = curl::new_handle("useragent" = "Mozilla/5.0")) %>% p_read_html()}) %>% 
+#     set_names(url) %>% compact()
+#   html_index <- html %>% 
+#     map(function(x){x %>% html_nodes(".addellis-f") %>% html_text() %>% '['(1)}) %>%
+#     map_lgl(function(x){!is.na(x)})
+#   
+#   html_f <- html[html_index]
+#   
+#   if(length(html_f)==0) {index_now = index_now + 1;print(str_c("all links are dead: article ",j, " to article ", k));next}
+#   
+#   table_raw <- html_f %>% map(function(x){x %>% html_table()})
+#   df_case_donation_tmp <- table_raw %>% map(function(x){x %>% '[['(2) %>% slice(-1)}) %>% bind_rows(.id = "link_detail") %>% as_tibble() %>%
+#     `colnames<-`(c("link_detail","donator_order", "donator", "donation", "donate_date"))
+#     
+#   df_case_donation <- df_case_donation %>% bind_rows(df_case_donation_tmp)
+#   
+#   print(str_c("finished article ", j, " to article ", k))
+#   index_now = index_now + 1
+#   Sys.sleep(20)
+#   closeAllConnections()
+#   gc()
+# }
+# 
+# df_case_donation
+# df_case_donation %>% distinct(link_detail)
+# df_case_donation %>% count(link_detail)
+# df_case_donation %>% 
+#   mutate(case_id = str_remove(link_detail, "https://tw.feature.appledaily.com/charity/projdetail/")) %>%
+#   write_rds("data/AS08/df_case_donation.rds")
+# df_case_donation %>% 
+#   mutate(case_id = str_remove(link_detail, "https://tw.feature.appledaily.com/charity/projdetail/")) %>% 
+#   write_csv("data/AS08/df_case_donation.csv")
+
+# df_case_donation <- read_csv("data/AS08/df_case_donation.csv")
+# df_case_list <- read_csv("data/AS08/df_case_list.csv")
+
+```
+
+### 作答區 - 作業要求檢查
+
+這邊的 code 請去掉 comment 後執行喔！可以用來確認結果！
+
+```{r message=FALSE, warning=FALSE}
+### your code
+df_case_list <- read_csv("data/AS08/df_case_list.csv")
+df_case_donation <- read_csv("data/AS08/df_case_donation.csv")
+
+## 檢查
+df_case_list %>% summarise(n_distinct(case_id))
+df_case_list %>% summarise(n_distinct(link))
+df_case_list %>% summarise(n_distinct(link_detail))
+
+df_case_donation %>% summarise(n_distinct(link_detail))
+
+## bar chart
+df_donator_top <- df_case_donation %>% 
+  mutate(donator = str_split(donator, ",|，|、")) %>%
+  unnest(c(donator)) %>% 
+  mutate(donator = if_else(str_detect(donator, "善心|匿名|不具名|無"), "匿名", donator)) %>%
+  count(donator, sort = T) %>% head(20)
+
+df_donator_top %>% slice(1:10) %>% mutate(donator = fct_reorder(donator, n)) %>%
+  ggplot(aes(donator, n)) + geom_col() +
+  coord_flip() +
+  theme_bw() +
+  guides(fill = FALSE) +
+  labs(x= "捐款人",y= "捐款次數", title = "捐款芳名錄與捐款次數", caption = "資料：蘋果日報基金會近兩百項案件") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black")) +
+  theme(text = element_text(family = "Noto Sans CJK TC Medium"))
+
+## 看長相
+df_case_list %>% glimpse()
+df_case_donation %>% glimpse()
+```
+
+## B. scrape PTT（50分）
+
+本小題的案例為[PTT 感情版]https://www.ptt.cc/bbs/Boy-Girl/index.html)，請抓取最近 5 頁的文章列表（20篇/頁），再抓取每篇文章的內文與留言，並整理出 3 個 dataframe，且分為以下欄位：
+
+- df_index，包含作者(index_author)、標題(index_title)、連結(index_link)
+- df_article，包含作者(article_author)、標題(article_title)、時間(article_dt)、內文(article_text)、IP與國家(article_IP)、留言數(article_ncomments)、連結(index_link)
+- df_comment，包含推文作者(comment_author)、推文時間(comment_dt)、推文內容(comment_text)、推文推噓(comment_type)、連結(index_link)
+
+另外，請注意以下幾點
+
+- 請去掉下方程式碼的註解(檢查部分)，以驗證你所抓到的資料未有重複    
+- 請用 `glimpse()` 分別呈現上述 tibble 的長相    
+- 請把文章(df_article)和留言(df_comment)串在一起
+
+### 作答區 - 爬蟲程式碼
+
+你可以把結果匯出成 csv，這樣就不用每次 knit 都要重抓一次資料，不過爬蟲的 code 要留著喔！加上 # comment 就好。
+
+```{r message=FALSE, warning=FALSE}
+### your code
+library(tidyverse)
+
+# df_index %>% write_csv("data/AS08/df_index.csv")
+# df_article %>% write_csv("data/AS08/df_article.csv")
+# df_comment %>% write_csv("data/AS08/df_comment.csv")
+```
+
+### 作答區 - 作業要求檢查
+
+```{r message=FALSE, warning=FALSE}
+### your code
+# df_index <- read_csv("data/AS08/df_index.csv")
+# df_article <- read_csv("data/AS08/df_article.csv")
+# df_comment <- read_csv("data/AS08/df_comment.csv")
+# 
+# # 檢查部分!!! 請去掉!!!
+# df_index %>% summarise(n_distinct(index_link))
+# df_article %>% summarise(n_distinct(index_link))
+# df_comment %>% summarise(n_distinct(index_link))
+# 
+# 
+# # 看長相
+# df_index %>% glimpse()
+# df_article %>% glimpse()
+# df_comment %>% glimpse()
+
+### your code - 串在一起
+
+
+```
