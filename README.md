@@ -12,7 +12,7 @@
 ### week14_05/19
 
 * AS 08 Homework Web Scraping HTML [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS08_Web-Scraping-HTML.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS08_Web-Scraping-HTML.html) 
-* AS 07 Reference Visualize-Text-Data [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS06_Homework_Visualize-Text-Data_ref.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS06_Homework_Visualize-Text-Data_ref.html) 
+* AS 07 Reference Visualize-Text-Data [Rmd](https://github.com/p4css/R4CSS_TA_1102/blob/main/AS07_Homework_Visualize-Text-Data_ref.Rmd), [html](https://p4css.github.io/R4CSS_TA_1102/AS07_Homework_Visualize-Text-Data_ref.html) 
 
 ### week13_05/12
 
